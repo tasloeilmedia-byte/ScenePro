@@ -6,7 +6,8 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
-import type { Artist, Booking, Message, Referral } from '@/types'
+import type { User } from '@supabase/supabase-js'
+import type { Artist, Booking, Company, Message, Profile, Referral } from '@/types'
 
 // ── TYPES PARTAGÉS ──────────────────────────────────────────
 
@@ -17,9 +18,35 @@ interface FetchState<T> {
   refetch: () => void
 }
 
+interface ArtistDashboardData {
+  artist:         Artist
+  bookings:       Booking[]
+  referrals:      Referral[]
+  unreadMessages: Message[]
+  stats: {
+    revenueThisMonth: number
+    totalBookings:    number
+    pendingCount:     number
+    referralEarnings: number
+  }
+}
+
+interface CompanyDashboardData {
+  company:   Company
+  bookings:  Booking[]
+  favorites: { id: string; artist: Artist }[]
+  stats: {
+    totalSpent:    number
+    totalBookings: number
+    eventCount:    number
+    pendingCount:  number
+  }
+  nextEvent: Booking | null
+}
+
 // ── HOOK GÉNÉRIQUE ──────────────────────────────────────────
 
-function useFetch<T>(fetcher: () => Promise<{ data: T | null; error: any }>): FetchState<T> {
+function useFetch<T>(fetcher: () => Promise<{ data: T | null; error: { message: string } | null }>): FetchState<T> {
   const [data, setData]       = useState<T | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError]     = useState<string | null>(null)
@@ -58,25 +85,27 @@ export function useArtists(filters: ArtistFilters = {}) {
   const [total, setTotal]     = useState(0)
   const [loading, setLoading] = useState(true)
 
-  const fetch = useCallback(async () => {
+  const { category, city, maxPrice, available, query, page, sortBy } = filters
+
+  const doFetch = useCallback(async () => {
     setLoading(true)
     const params = new URLSearchParams()
-    if (filters.category && filters.category !== 'all') params.set('category', filters.category)
-    if (filters.city)      params.set('city', filters.city)
-    if (filters.maxPrice)  params.set('maxPrice', String(filters.maxPrice))
-    if (filters.available) params.set('available', 'true')
-    if (filters.query)     params.set('q', filters.query)
-    if (filters.page)      params.set('page', String(filters.page))
-    if (filters.sortBy)    params.set('sortBy', filters.sortBy)
+    if (category && category !== 'all') params.set('category', category)
+    if (city)      params.set('city', city)
+    if (maxPrice)  params.set('maxPrice', String(maxPrice))
+    if (available) params.set('available', 'true')
+    if (query)     params.set('q', query)
+    if (page)      params.set('page', String(page))
+    if (sortBy)    params.set('sortBy', sortBy)
 
-    const res = await fetch(`/api/artists?${params}`)
+    const res = await window.fetch(`/api/artists?${params}`)
     const json = await res.json()
     setArtists(json.artists ?? [])
     setTotal(json.total ?? 0)
     setLoading(false)
-  }, [JSON.stringify(filters)])
+  }, [category, city, maxPrice, available, query, page, sortBy])
 
-  useEffect(() => { fetch() }, [fetch])
+  useEffect(() => { doFetch() }, [doFetch])
 
   return { artists, total, loading }
 }
@@ -101,7 +130,7 @@ export function useArtistProfile(artistId: string) {
 // ──────────────────────────────────────────────────────────────
 
 export function useArtistDashboard() {
-  const [data, setData]       = useState<any>(null)
+  const [data, setData]       = useState<ArtistDashboardData | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -150,7 +179,7 @@ export function useArtistDashboard() {
             .reduce((a, b) => a + b.artist_receives / 100, 0),
           totalBookings:    artist.total_bookings,
           pendingCount:     bookings.filter(b => b.status === 'pending').length,
-          referralEarnings: (referralsRes.data ?? []).reduce((a: number, r: any) => a + r.total_earned / 100, 0),
+          referralEarnings: (referralsRes.data ?? []).reduce((a: number, r: Referral) => a + r.total_earned / 100, 0),
         },
       })
       setLoading(false)
@@ -166,7 +195,7 @@ export function useArtistDashboard() {
 // ──────────────────────────────────────────────────────────────
 
 export function useCompanyDashboard() {
-  const [data, setData]       = useState<any>(null)
+  const [data, setData]       = useState<CompanyDashboardData | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -263,8 +292,8 @@ export function useMessages(bookingId: string) {
 // ──────────────────────────────────────────────────────────────
 
 export function useAuth() {
-  const [user, setUser]       = useState<any>(null)
-  const [profile, setProfile] = useState<any>(null)
+  const [user, setUser]       = useState<User | null>(null)
+  const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -361,11 +390,17 @@ export function useAvailability(artistId: string, year: number, month: number) {
 
   const toggleDay = async (date: string) => {
     if (blocked.includes(date)) {
-      await supabase.from('artist_availabilities').delete().eq('artist_id', artistId).eq('date', date)
-      setBlocked(prev => prev.filter(d => d !== date))
+      const { error } = await supabase
+        .from('artist_availabilities')
+        .delete()
+        .eq('artist_id', artistId)
+        .eq('date', date)
+      if (!error) setBlocked(prev => prev.filter(d => d !== date))
     } else {
-      await supabase.from('artist_availabilities').upsert({ artist_id: artistId, date, is_blocked: true })
-      setBlocked(prev => [...prev, date])
+      const { error } = await supabase
+        .from('artist_availabilities')
+        .upsert({ artist_id: artistId, date, is_blocked: true })
+      if (!error) setBlocked(prev => [...prev, date])
     }
   }
 

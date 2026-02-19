@@ -1,6 +1,19 @@
 // ============================================================
-// API ROUTES Next.js 14 (App Router)
-// Chaque section correspond à un fichier route.ts séparé
+// DEPRECATED — Ce fichier a été remplacé par des fichiers
+// route.ts individuels dans chaque sous-dossier api/.
+// Voir : app/api/auth/register/route.ts
+//        app/api/artists/route.ts
+//        app/api/artists/[id]/route.ts
+//        app/api/artists/stripe-onboarding/route.ts
+//        app/api/bookings/route.ts
+//        app/api/bookings/[id]/accept/route.ts
+//        app/api/bookings/[id]/refuse/route.ts
+//        app/api/payments/intent/route.ts
+//        app/api/payments/webhook/route.ts
+//        app/api/referrals/validate/route.ts
+//        app/api/messages/route.ts
+//        app/api/admin/artists/[id]/approve/route.ts
+// Ce fichier est conservé à titre de référence uniquement.
 // ============================================================
 
 // ─────────────────────────────────────────────────────────────
@@ -9,6 +22,7 @@
 // ─────────────────────────────────────────────────────────────
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { parsePositiveInt, parsePositiveNumber, parseEnum, apiError } from '@/lib/validation'
 
 // POST /api/auth/register
 export async function POST_REGISTER(req: NextRequest) {
@@ -87,6 +101,9 @@ export async function POST_REGISTER(req: NextRequest) {
 // app/api/artists/route.ts
 // GET /api/artists?category=comedian&city=Lyon&maxPrice=1500&page=1
 // ─────────────────────────────────────────────────────────────
+const SORT_OPTIONS = ['recommended', 'price_asc', 'price_desc', 'bookings'] as const
+type SortOption = typeof SORT_OPTIONS[number]
+
 export async function GET_ARTISTS(req: NextRequest) {
   const { searchParams } = req.nextUrl
   const { artistQueries } = await import('@/lib/supabase')
@@ -94,12 +111,12 @@ export async function GET_ARTISTS(req: NextRequest) {
   const { data, count, error } = await artistQueries.search({
     category:  searchParams.get('category') ?? undefined,
     city:      searchParams.get('city') ?? undefined,
-    maxPrice:  searchParams.get('maxPrice') ? Number(searchParams.get('maxPrice')) : undefined,
+    maxPrice:  parsePositiveNumber(searchParams.get('maxPrice')),
     available: searchParams.get('available') === 'true',
     query:     searchParams.get('q') ?? undefined,
-    page:      Number(searchParams.get('page') ?? 1),
-    perPage:   Number(searchParams.get('perPage') ?? 12),
-    sortBy:    (searchParams.get('sortBy') as any) ?? 'recommended',
+    page:      parsePositiveInt(searchParams.get('page'), 1),
+    perPage:   parsePositiveInt(searchParams.get('perPage'), 12, 100),
+    sortBy:    parseEnum<SortOption>(searchParams.get('sortBy'), SORT_OPTIONS, 'recommended'),
   })
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
@@ -142,6 +159,10 @@ export async function POST_BOOKING(req: NextRequest) {
 
   if (!session) return NextResponse.json({ error: 'Non authentifié' }, { status: 401 })
 
+  if (!body.artistPrice || body.artistPrice <= 0) {
+    return apiError('Prix artiste invalide', 400)
+  }
+
   const { data, error } = await bookingQueries.create({
     artist_id:            body.artistId,
     company_id:           body.companyId,
@@ -165,7 +186,7 @@ export async function POST_BOOKING(req: NextRequest) {
 export async function POST_ACCEPT(req: NextRequest, { params }: { params: { id: string } }) {
   const { bookingQueries } = await import('@/lib/supabase')
   const { data, error } = await bookingQueries.accept(params.id)
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) return apiError(error.message, error.code === 'PGRST116' ? 404 : 500)
   return NextResponse.json({ booking: data })
 }
 
@@ -178,7 +199,7 @@ export async function POST_REFUSE(req: NextRequest, { params }: { params: { id: 
   const { reason } = await req.json()
   const { bookingQueries } = await import('@/lib/supabase')
   const { data, error } = await bookingQueries.refuse(params.id, reason)
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) return apiError(error.message, error.code === 'PGRST116' ? 404 : 500)
   return NextResponse.json({ booking: data })
 }
 
@@ -250,7 +271,7 @@ export async function POST_WEBHOOK(req: NextRequest) {
   switch (event.type) {
 
     case 'payment_intent.succeeded': {
-      const intent = event.data.object as any
+      const intent = event.data.object as { metadata: { booking_id: string }; amount: number }
       const bookingId = intent.metadata.booking_id
       await supabaseAdmin
         .from('bookings')
@@ -263,14 +284,14 @@ export async function POST_WEBHOOK(req: NextRequest) {
     }
 
     case 'payment_intent.payment_failed': {
-      const intent = event.data.object as any
+      const intent = event.data.object as { metadata: { booking_id: string } }
       console.error(`❌ Paiement échoué pour booking ${intent.metadata.booking_id}`)
       break
     }
 
     case 'account.updated': {
       // Artiste a finalisé son onboarding Stripe Connect
-      const account = event.data.object as any
+      const account = event.data.object as { id: string; charges_enabled: boolean }
       if (account.charges_enabled) {
         await supabaseAdmin
           .from('artists')
@@ -294,30 +315,35 @@ export async function POST_STRIPE_ONBOARDING(req: NextRequest) {
   const { stripe } = await import('@/lib/stripe')
   const { supabaseAdmin } = await import('@/lib/supabase')
 
-  // 1. Créer le compte Express Stripe
-  const account = await stripe.accounts.create({
-    type: 'express', email, country: 'FR',
-    capabilities: {
-      card_payments: { requested: true },
-      transfers:     { requested: true },
-    },
-  })
+  try {
+    // 1. Créer le compte Express Stripe
+    const account = await stripe.accounts.create({
+      type: 'express', email, country: 'FR',
+      capabilities: {
+        card_payments: { requested: true },
+        transfers:     { requested: true },
+      },
+    })
 
-  // 2. Sauvegarder l'ID dans la base
-  await supabaseAdmin
-    .from('artists')
-    .update({ stripe_account_id: account.id })
-    .eq('id', artistId)
+    // 2. Sauvegarder l'ID dans la base
+    await supabaseAdmin
+      .from('artists')
+      .update({ stripe_account_id: account.id })
+      .eq('id', artistId)
 
-  // 3. Générer le lien d'onboarding
-  const link = await stripe.accountLinks.create({
-    account:     account.id,
-    refresh_url: `${process.env.NEXT_PUBLIC_APP_URL}/artist/dashboard?stripe=refresh`,
-    return_url:  `${process.env.NEXT_PUBLIC_APP_URL}/artist/dashboard?stripe=success`,
-    type:        'account_onboarding',
-  })
+    // 3. Générer le lien d'onboarding
+    const link = await stripe.accountLinks.create({
+      account:     account.id,
+      refresh_url: `${process.env.NEXT_PUBLIC_APP_URL}/artist/dashboard?stripe=refresh`,
+      return_url:  `${process.env.NEXT_PUBLIC_APP_URL}/artist/dashboard?stripe=success`,
+      type:        'account_onboarding',
+    })
 
-  return NextResponse.json({ url: link.url })
+    return NextResponse.json({ url: link.url })
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Erreur Stripe'
+    return apiError(message, 500)
+  }
 }
 
 
@@ -338,6 +364,23 @@ export async function POST_VALIDATE_REFERRAL(req: NextRequest) {
 // POST /api/admin/artists/:id/approve
 // ─────────────────────────────────────────────────────────────
 export async function POST_APPROVE_ARTIST(req: NextRequest, { params }: { params: { id: string } }) {
+  const { createRouteHandlerClient } = await import('@supabase/auth-helpers-nextjs')
+  const { cookies } = await import('next/headers')
+  const supabaseAuth = createRouteHandlerClient({ cookies })
+  const { data: { session } } = await supabaseAuth.auth.getSession()
+
+  if (!session) return NextResponse.json({ error: 'Non authentifié' }, { status: 401 })
+
+  const { data: profile } = await supabaseAuth
+    .from('profiles')
+    .select('role')
+    .eq('id', session.user.id)
+    .single()
+
+  if (!profile || profile.role !== 'admin') {
+    return NextResponse.json({ error: 'Accès interdit' }, { status: 403 })
+  }
+
   const { adminQueries } = await import('@/lib/supabase')
   const { data, error } = await adminQueries.approveArtist(params.id)
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })

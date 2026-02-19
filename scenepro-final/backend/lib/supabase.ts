@@ -149,10 +149,11 @@ export const bookingQueries = {
         .single()
 
       if (data) {
-        const active = data.referrals_sent?.find((r: any) =>
+        interface ReferralRecord { id: string; referrer_id: string; referred_id: string; is_active: boolean; expires_at: string }
+        const active = (data.referrals_sent as ReferralRecord[] | null)?.find(r =>
           r.referred_id === payload.artist_id && r.is_active
         )
-        referral = active ?? null
+        referral = (active as Referral | undefined) ?? null
       }
     }
 
