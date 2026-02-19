@@ -1,0 +1,1396 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin — ScènePro</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Syne:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #06070a;
+      --surface:  #0a0c10;
+      --card:     #0e1016;
+      --card2:    #12151c;
+      --border:   rgba(255,255,255,0.06);
+      --border2:  rgba(255,255,255,0.1);
+      --gold:     #c9a84c;
+      --gold-dim: rgba(201,168,76,0.1);
+      --gold-glow:rgba(201,168,76,0.05);
+      --cream:    #dde2ec;
+      --muted:    rgba(221,226,236,0.4);
+      --muted2:   rgba(221,226,236,0.15);
+      --ruby:     #c0392b;
+      --ruby-dim: rgba(192,57,43,0.12);
+      --ruby-glow:rgba(192,57,43,0.06);
+      --green:    #27ae60;
+      --green-dim:rgba(39,174,96,0.12);
+      --blue:     #2980b9;
+      --blue-dim: rgba(41,128,185,0.12);
+      --amber:    #e67e22;
+      --amber-dim:rgba(230,126,34,0.12);
+      --sidebar-w:240px;
+      --mono:     'JetBrains Mono', monospace;
+    }
+
+    html, body { height: 100%; overflow: hidden; }
+    body {
+      background: var(--bg);
+      color: var(--cream);
+      font-family: 'Syne', sans-serif;
+      font-weight: 400;
+      display: flex;
+    }
+
+    ::-webkit-scrollbar { width: 3px; height: 3px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(201,168,76,0.25); }
+
+    /* ══ SIDEBAR ══ */
+    .sidebar {
+      width: var(--sidebar-w);
+      min-height: 100vh;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+    .sb-logo {
+      padding: 22px 20px 18px;
+      border-bottom: 1px solid var(--border);
+    }
+    .sb-logo-text {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--cream);
+    }
+    .sb-logo-text span { color: var(--gold); }
+    .sb-logo-badge {
+      display: inline-block;
+      font-size: 0.55rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--ruby);
+      background: var(--ruby-dim);
+      border: 1px solid rgba(192,57,43,0.2);
+      padding: 2px 7px;
+      margin-top: 4px;
+    }
+    .sb-admin-info {
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .sb-avatar {
+      width: 36px; height: 36px;
+      border-radius: 4px;
+      background: var(--ruby-dim);
+      border: 1px solid rgba(192,57,43,0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      flex-shrink: 0;
+    }
+    .sb-admin-name { font-size: 0.82rem; font-weight: 600; }
+    .sb-admin-role { font-size: 0.6rem; color: var(--ruby); letter-spacing: 0.1em; text-transform: uppercase; margin-top: 1px; }
+
+    .sb-nav { flex: 1; padding: 12px 10px; overflow-y: auto; }
+    .sb-section-label {
+      font-size: 0.55rem;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--muted2);
+      padding: 0 10px;
+      margin: 14px 0 6px;
+    }
+    .sb-item {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 9px 10px;
+      font-size: 0.78rem;
+      font-weight: 500;
+      color: var(--muted);
+      cursor: pointer;
+      border: 1px solid transparent;
+      border-radius: 2px;
+      transition: all 0.18s;
+      letter-spacing: 0.03em;
+      position: relative;
+    }
+    .sb-item:hover { color: var(--cream); background: var(--gold-glow); }
+    .sb-item.active { color: var(--gold); background: var(--gold-dim); border-color: rgba(201,168,76,0.2); }
+    .sb-icon { width: 18px; text-align: center; font-size: 0.9rem; flex-shrink: 0; }
+    .sb-badge {
+      margin-left: auto;
+      font-size: 0.58rem;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 10px;
+      background: var(--ruby);
+      color: #fff;
+      min-width: 18px;
+      text-align: center;
+    }
+    .sb-badge.amber { background: var(--amber); }
+    .sb-footer {
+      padding: 12px 10px;
+      border-top: 1px solid var(--border);
+    }
+
+    /* ══ MAIN ══ */
+    .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+    /* ══ TOPBAR ══ */
+    .topbar {
+      height: 56px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .topbar-left { display: flex; align-items: center; gap: 16px; }
+    .page-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.2rem;
+      font-weight: 600;
+      font-style: italic;
+    }
+    .page-path {
+      font-size: 0.65rem;
+      color: var(--muted);
+      letter-spacing: 0.08em;
+    }
+    .topbar-right { display: flex; align-items: center; gap: 10px; }
+    .tb-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 6px 14px;
+      font-family: 'Syne', sans-serif;
+      font-size: 0.68rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .tb-btn:hover { border-color: var(--gold); color: var(--gold); }
+    .tb-btn.danger { border-color: rgba(192,57,43,0.3); color: var(--ruby); }
+    .tb-btn.danger:hover { border-color: var(--ruby); background: var(--ruby-dim); }
+    .live-dot {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.65rem;
+      color: var(--green);
+      letter-spacing: 0.1em;
+    }
+    .live-dot::before {
+      content: '';
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--green);
+      animation: blink 2s infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+    /* ══ CONTENT AREA ══ */
+    .content { flex: 1; overflow-y: auto; padding: 24px 28px 40px; }
+
+    /* ══ SECTION VIEWS ══ */
+    .section-view { display: none; }
+    .section-view.active { display: block; animation: fadeIn 0.3s ease; }
+    @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+
+    /* ══ KPI GRID ══ */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .kpi {
+      background: var(--card);
+      border: 1px solid var(--border);
+      padding: 18px 20px;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.25s;
+    }
+    .kpi:hover { border-color: rgba(201,168,76,0.2); }
+    .kpi-label {
+      font-size: 0.58rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .kpi-val {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2rem;
+      font-weight: 700;
+      line-height: 1;
+      margin-bottom: 5px;
+    }
+    .kpi-delta {
+      font-size: 0.65rem;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .up   { color: var(--green); }
+    .down { color: var(--ruby); }
+    .neu  { color: var(--muted); }
+    .kpi-bar {
+      position: absolute;
+      bottom: 0; left: 0;
+      height: 2px;
+    }
+
+    /* ══ GRID 2COL ══ */
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+    .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+    .grid-wide { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; margin-bottom: 16px; }
+
+    /* ══ PANEL ══ */
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--border);
+    }
+    .panel-head {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .panel-title {
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+    .panel-action {
+      font-size: 0.62rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--gold);
+      background: none;
+      border: none;
+      font-family: 'Syne', sans-serif;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    .panel-action:hover { opacity: 0.7; }
+
+    /* ══ REVENUE CHART ══ */
+    .chart-wrap { padding: 20px 18px 10px; }
+    .chart-bars {
+      display: flex;
+      align-items: flex-end;
+      gap: 8px;
+      height: 120px;
+    }
+    .bar-group { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; }
+    .bar {
+      width: 100%;
+      background: var(--gold-dim);
+      border: 1px solid rgba(201,168,76,0.2);
+      border-radius: 1px;
+      transition: background 0.2s;
+      cursor: pointer;
+      position: relative;
+    }
+    .bar:hover { background: rgba(201,168,76,0.25); }
+    .bar-label { font-size: 0.58rem; color: var(--muted2); letter-spacing: 0.06em; }
+
+    /* ══ TABLE ══ */
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; }
+    thead th {
+      font-size: 0.58rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--muted2);
+      padding: 10px 16px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+      font-weight: 500;
+    }
+    tbody tr {
+      border-bottom: 1px solid var(--border);
+      transition: background 0.15s;
+      cursor: pointer;
+    }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: var(--card2); }
+    td {
+      padding: 11px 16px;
+      font-size: 0.78rem;
+      white-space: nowrap;
+    }
+    .td-name { font-weight: 600; }
+    .td-mono { font-family: var(--mono); font-size: 0.72rem; color: var(--muted); }
+    .td-amount { font-family: 'Cormorant Garamond', serif; font-size: 1rem; font-weight: 700; }
+
+    /* ══ BADGES ══ */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.6rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 3px 8px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .badge::before { content:''; width:4px; height:4px; border-radius:50%; background:currentColor; }
+    .badge-pending  { color:var(--amber);  background:var(--amber-dim); }
+    .badge-approved { color:var(--green);  background:var(--green-dim); }
+    .badge-paid     { color:var(--green);  background:var(--green-dim); }
+    .badge-refused  { color:var(--ruby);   background:var(--ruby-dim); }
+    .badge-suspended{ color:var(--ruby);   background:var(--ruby-dim); }
+    .badge-completed{ color:var(--gold);   background:var(--gold-dim); }
+    .badge-disputed { color:var(--ruby);   background:var(--ruby-dim); border:1px solid rgba(192,57,43,0.3); }
+    .badge-active   { color:var(--blue);   background:var(--blue-dim); }
+
+    /* ══ ACTION BUTTONS ══ */
+    .action-btns { display: flex; gap: 6px; }
+    .act-btn {
+      padding: 4px 10px;
+      border: 1px solid var(--border);
+      background: transparent;
+      font-family: 'Syne', sans-serif;
+      font-size: 0.6rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.15s;
+      color: var(--muted);
+    }
+    .act-btn:hover { border-color: var(--cream); color: var(--cream); }
+    .act-btn.approve { color:var(--green); border-color:rgba(39,174,96,0.3); }
+    .act-btn.approve:hover { background:var(--green-dim); }
+    .act-btn.reject  { color:var(--ruby); border-color:rgba(192,57,43,0.3); }
+    .act-btn.reject:hover { background:var(--ruby-dim); }
+
+    /* ══ SEARCH BAR ══ */
+    .search-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 18px;
+      border-bottom: 1px solid var(--border);
+    }
+    .search-input {
+      flex: 1;
+      background: var(--card2);
+      border: 1px solid var(--border);
+      color: var(--cream);
+      padding: 7px 12px;
+      font-family: 'Syne', sans-serif;
+      font-size: 0.75rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .search-input:focus { border-color: rgba(201,168,76,0.35); }
+    .search-input::placeholder { color: var(--muted2); }
+    .filter-select {
+      background: var(--card2);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 7px 10px;
+      font-family: 'Syne', sans-serif;
+      font-size: 0.72rem;
+      outline: none;
+      cursor: pointer;
+    }
+
+    /* ══ ACTIVITY FEED ══ */
+    .feed-item {
+      padding: 12px 18px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+    .feed-item:last-child { border-bottom: none; }
+    .feed-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      margin-top: 5px;
+      flex-shrink: 0;
+    }
+    .feed-text { font-size: 0.75rem; line-height: 1.5; flex: 1; }
+    .feed-text strong { color: var(--cream); font-weight: 600; }
+    .feed-time { font-size: 0.62rem; color: var(--muted2); font-family: var(--mono); flex-shrink: 0; margin-top: 2px; }
+
+    /* ══ VALIDATION CARD ══ */
+    .validation-card {
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      transition: background 0.15s;
+    }
+    .validation-card:last-child { border-bottom: none; }
+    .validation-card:hover { background: var(--card2); }
+    .val-avatar {
+      width: 42px; height: 42px;
+      border-radius: 50%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.2rem; flex-shrink: 0;
+    }
+    .val-info { flex: 1; min-width: 0; }
+    .val-name { font-size: 0.85rem; font-weight: 600; margin-bottom: 2px; }
+    .val-meta { font-size: 0.68rem; color: var(--muted); }
+    .val-date { font-size: 0.62rem; color: var(--muted2); font-family: var(--mono); flex-shrink: 0; margin-bottom: auto; }
+
+    /* ══ TABS ══ */
+    .tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+      padding: 0 18px;
+    }
+    .tab {
+      padding: 10px 16px;
+      font-size: 0.65rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+      transition: all 0.18s;
+      background: none;
+      border-top: none;
+      border-left: none;
+      border-right: none;
+      font-family: 'Syne', sans-serif;
+      font-weight: 500;
+    }
+    .tab:hover { color: var(--cream); }
+    .tab.active { color: var(--gold); border-bottom-color: var(--gold); }
+
+    /* ══ COMMISSION SUMMARY ══ */
+    .commission-row {
+      display: flex;
+      align-items: center;
+      padding: 12px 18px;
+      border-bottom: 1px solid var(--border);
+      gap: 12px;
+    }
+    .commission-row:last-child { border-bottom: none; }
+    .comm-month {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      color: var(--muted);
+      width: 80px;
+      flex-shrink: 0;
+    }
+    .comm-bar-wrap { flex: 1; height: 4px; background: var(--surface); }
+    .comm-bar { height: 100%; background: var(--gold); transition: width 1s ease; }
+    .comm-amount {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.05rem;
+      font-weight: 700;
+      width: 80px;
+      text-align: right;
+      flex-shrink: 0;
+    }
+    .comm-delta { font-size: 0.62rem; width: 50px; text-align: right; flex-shrink: 0; }
+
+    /* ══ LITIGES ══ */
+    .litige-card {
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--border);
+      border-left: 3px solid var(--ruby);
+      background: var(--ruby-glow);
+    }
+    .litige-card:last-child { border-bottom: none; }
+    .litige-title { font-size: 0.82rem; font-weight: 600; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
+    .litige-meta { font-size: 0.7rem; color: var(--muted); margin-bottom: 10px; }
+    .litige-actions { display: flex; gap: 8px; }
+
+    /* ══ BLOG POSTS ══ */
+    .blog-item {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      transition: background 0.15s;
+    }
+    .blog-item:hover { background: var(--card2); }
+    .blog-item:last-child { border-bottom: none; }
+    .blog-info { flex: 1; min-width: 0; }
+    .blog-title-t { font-size: 0.82rem; font-weight: 600; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .blog-meta-t { font-size: 0.65rem; color: var(--muted); }
+
+    /* ══ TOGGLE ══ */
+    .toggle-wrap { display: flex; align-items: center; gap: 8px; }
+    .toggle {
+      width: 36px; height: 18px;
+      background: var(--border2);
+      border-radius: 9px;
+      cursor: pointer;
+      position: relative;
+      transition: background 0.25s;
+      flex-shrink: 0;
+    }
+    .toggle.on { background: var(--green); }
+    .toggle::after {
+      content: '';
+      width: 12px; height: 12px;
+      border-radius: 50%;
+      background: #fff;
+      position: absolute;
+      top: 3px; left: 3px;
+      transition: left 0.25s;
+    }
+    .toggle.on::after { left: 21px; }
+
+    /* ══ STATS RING ══ */
+    .ring-wrap { display: flex; align-items: center; justify-content: center; padding: 20px; }
+    svg.ring { transform: rotate(-90deg); }
+    .ring-center {
+      position: absolute;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+    }
+    .ring-val { font-family: 'Cormorant Garamond', serif; font-size: 1.8rem; font-weight: 700; }
+    .ring-label { font-size: 0.58rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+    .ring-container { position: relative; width: 120px; height: 120px; display: flex; align-items: center; justify-content: center; }
+
+    /* ══ ALERT BANNER ══ */
+    .alert-banner {
+      background: var(--ruby-dim);
+      border: 1px solid rgba(192,57,43,0.25);
+      border-left: 3px solid var(--ruby);
+      padding: 12px 18px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+      font-size: 0.78rem;
+    }
+    .alert-banner.amber { background: var(--amber-dim); border-color: rgba(230,126,34,0.25); border-left-color: var(--amber); }
+
+    /* ══ PAGE SECTIONS ══ */
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    .section-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.4rem;
+      font-weight: 700;
+    }
+    .section-title em { font-style: italic; color: var(--gold); }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════
+     SIDEBAR
+══════════════════════════════════ -->
+<aside class="sidebar">
+  <div class="sb-logo">
+    <div class="sb-logo-text">Scène<span>Pro</span></div>
+    <div class="sb-logo-badge">⚙ Admin Console</div>
+  </div>
+
+  <div class="sb-admin-info">
+    <div class="sb-avatar">👑</div>
+    <div>
+      <div class="sb-admin-name">Admin Principal</div>
+      <div class="sb-admin-role">Super Admin</div>
+    </div>
+  </div>
+
+  <nav class="sb-nav">
+    <div class="sb-section-label">Vue globale</div>
+    <div class="sb-item active" onclick="goto('dashboard', this)">
+      <span class="sb-icon">◈</span> Tableau de bord
+    </div>
+    <div class="sb-item" onclick="goto('transactions', this)">
+      <span class="sb-icon">💶</span> Transactions
+    </div>
+
+    <div class="sb-section-label">Utilisateurs</div>
+    <div class="sb-item" onclick="goto('artists', this)">
+      <span class="sb-icon">🎭</span> Artistes
+      <span class="sb-badge amber">7</span>
+    </div>
+    <div class="sb-item" onclick="goto('companies', this)">
+      <span class="sb-icon">🏢</span> Entreprises
+    </div>
+
+    <div class="sb-section-label">Activité</div>
+    <div class="sb-item" onclick="goto('bookings', this)">
+      <span class="sb-icon">📋</span> Bookings
+      <span class="sb-badge">2</span>
+    </div>
+    <div class="sb-item" onclick="goto('litiges', this)">
+      <span class="sb-icon">⚠️</span> Litiges
+      <span class="sb-badge">1</span>
+    </div>
+    <div class="sb-item" onclick="goto('referrals', this)">
+      <span class="sb-icon">🌐</span> Parrainage
+    </div>
+
+    <div class="sb-section-label">Contenu</div>
+    <div class="sb-item" onclick="goto('blog', this)">
+      <span class="sb-icon">📝</span> Blog
+    </div>
+    <div class="sb-item" onclick="goto('categories', this)">
+      <span class="sb-icon">🏷</span> Catégories
+    </div>
+
+    <div class="sb-section-label">Système</div>
+    <div class="sb-item" onclick="goto('settings', this)">
+      <span class="sb-icon">⚙</span> Paramètres
+    </div>
+  </nav>
+
+  <div class="sb-footer">
+    <div class="sb-item" style="color:var(--ruby);opacity:0.7" onclick="alert('Déconnexion...')">
+      <span class="sb-icon">→</span> Déconnexion
+    </div>
+  </div>
+</aside>
+
+<!-- ══════════════════════════════════
+     MAIN
+══════════════════════════════════ -->
+<div class="main">
+
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <div class="topbar-left">
+      <div>
+        <div class="page-title" id="page-title">Vue d'ensemble</div>
+        <div class="page-path" id="page-path">Admin / Tableau de bord</div>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <div class="live-dot">Live</div>
+      <button class="tb-btn" onclick="alert('Export CSV')">↓ Exporter</button>
+      <button class="tb-btn danger" onclick="alert('Mode maintenance')">⚠ Maintenance</button>
+    </div>
+  </header>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- ══════════ DASHBOARD ══════════ -->
+    <div class="section-view active" id="view-dashboard">
+
+      <div class="alert-banner amber" id="alert-pending">
+        ⚠ <strong>7 artistes</strong> en attente de validation · <strong>1 litige</strong> ouvert nécessite votre attention
+        <button class="act-btn" style="margin-left:auto" onclick="goto('artists', document.querySelector('.sb-item:nth-child(5)'))">Traiter →</button>
+      </div>
+
+      <!-- KPIs -->
+      <div class="kpi-grid">
+        <div class="kpi">
+          <div class="kpi-label">Revenus totaux <span>💶</span></div>
+          <div class="kpi-val" style="color:var(--gold)">18 450 €</div>
+          <div class="kpi-delta up">↑ +34% ce mois</div>
+          <div class="kpi-bar" style="width:72%;background:var(--gold)"></div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Bookings <span>📋</span></div>
+          <div class="kpi-val">142</div>
+          <div class="kpi-delta up">↑ +18 ce mois</div>
+          <div class="kpi-bar" style="width:60%;background:var(--blue)"></div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Artistes actifs <span>🎭</span></div>
+          <div class="kpi-val">487</div>
+          <div class="kpi-delta up">↑ +23 ce mois</div>
+          <div class="kpi-bar" style="width:80%;background:var(--green)"></div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Entreprises <span>🏢</span></div>
+          <div class="kpi-val">203</div>
+          <div class="kpi-delta up">↑ +11 ce mois</div>
+          <div class="kpi-bar" style="width:50%;background:var(--amber)"></div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Litiges ouverts <span>⚠️</span></div>
+          <div class="kpi-val" style="color:var(--ruby)">1</div>
+          <div class="kpi-delta neu">Vs 3 le mois dernier</div>
+          <div class="kpi-bar" style="width:20%;background:var(--ruby)"></div>
+        </div>
+      </div>
+
+      <div class="grid-wide">
+        <!-- REVENUS CHART -->
+        <div class="panel">
+          <div class="panel-head">
+            <div class="panel-title">📈 Revenus mensuels (2026)</div>
+            <button class="panel-action">Détail →</button>
+          </div>
+          <div class="chart-wrap">
+            <div class="chart-bars" id="chartBars">
+              <!-- Généré par JS -->
+            </div>
+          </div>
+          <div style="padding:10px 18px 16px;display:flex;gap:20px;font-size:0.62rem;color:var(--muted)">
+            <span style="color:var(--gold)">■</span> Commissions brutes &nbsp;·&nbsp;
+            <span>Total YTD : <strong style="color:var(--cream)">18 450 €</strong></span> &nbsp;·&nbsp;
+            <span>Objectif mois : <strong style="color:var(--green)">3 500 €</strong></span>
+          </div>
+        </div>
+
+        <!-- RÉPARTITION -->
+        <div class="panel">
+          <div class="panel-head">
+            <div class="panel-title">🎭 Par catégorie</div>
+          </div>
+          <div style="padding:16px 18px">
+            <div id="catBars"><!-- généré JS --></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid2">
+        <!-- VALIDATIONS EN ATTENTE -->
+        <div class="panel">
+          <div class="panel-head">
+            <div class="panel-title">⏳ Profils à valider <span class="sb-badge amber" style="margin-left:6px">7</span></div>
+            <button class="panel-action" onclick="goto('artists', document.querySelector('.sb-item:nth-child(5)'))">Tout voir →</button>
+          </div>
+          <div>
+            <div class="validation-card">
+              <div class="val-avatar">🎭</div>
+              <div class="val-info">
+                <div class="val-name">Marc Dubois</div>
+                <div class="val-meta">Comédien · Paris · Inscrit il y a 2j</div>
+              </div>
+              <div class="val-date">17/02/26</div>
+              <div class="action-btns">
+                <button class="act-btn approve" onclick="approveArtist(this)">✓ Valider</button>
+                <button class="act-btn reject" onclick="rejectArtist(this)">✕</button>
+              </div>
+            </div>
+            <div class="validation-card">
+              <div class="val-avatar">🎵</div>
+              <div class="val-info">
+                <div class="val-name">Clara Mezzo</div>
+                <div class="val-meta">Musicienne · Lyon · Inscrit il y a 3j</div>
+              </div>
+              <div class="val-date">16/02/26</div>
+              <div class="action-btns">
+                <button class="act-btn approve" onclick="approveArtist(this)">✓ Valider</button>
+                <button class="act-btn reject" onclick="rejectArtist(this)">✕</button>
+              </div>
+            </div>
+            <div class="validation-card">
+              <div class="val-avatar">🤹</div>
+              <div class="val-info">
+                <div class="val-name">Arturo Flamini</div>
+                <div class="val-meta">Cirque · Marseille · Inscrit il y a 4j</div>
+              </div>
+              <div class="val-date">15/02/26</div>
+              <div class="action-btns">
+                <button class="act-btn approve" onclick="approveArtist(this)">✓ Valider</button>
+                <button class="act-btn reject" onclick="rejectArtist(this)">✕</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ACTIVITÉ RÉCENTE -->
+        <div class="panel">
+          <div class="panel-head">
+            <div class="panel-title">⚡ Activité en temps réel</div>
+          </div>
+          <div id="activityFeed">
+            <div class="feed-item">
+              <div class="feed-dot" style="background:var(--green)"></div>
+              <div class="feed-text">Booking <strong>#BK-1042</strong> payé — Viva Tech + Sophie Marleau · <span style="color:var(--gold)">+150 €</span></div>
+              <div class="feed-time">09:14</div>
+            </div>
+            <div class="feed-item">
+              <div class="feed-dot" style="background:var(--amber)"></div>
+              <div class="feed-text">Nouvel artiste inscrit : <strong>Marc Dubois</strong> · en attente de validation</div>
+              <div class="feed-time">08:52</div>
+            </div>
+            <div class="feed-item">
+              <div class="feed-dot" style="background:var(--blue)"></div>
+              <div class="feed-text">Nouvelle entreprise : <strong>BioFrance Congress</strong> · compte créé</div>
+              <div class="feed-time">08:31</div>
+            </div>
+            <div class="feed-item">
+              <div class="feed-dot" style="background:var(--ruby)"></div>
+              <div class="feed-text">Litige ouvert sur booking <strong>#BK-1038</strong> — Salon Agriculture</div>
+              <div class="feed-time">07:45</div>
+            </div>
+            <div class="feed-item">
+              <div class="feed-dot" style="background:var(--green)"></div>
+              <div class="feed-text">Booking <strong>#BK-1041</strong> accepté — Forum RH + Léo Fantini</div>
+              <div class="feed-time">07:22</div>
+            </div>
+            <div class="feed-item">
+              <div class="feed-dot" style="background:var(--gold)"></div>
+              <div class="feed-text">Parrainage : <strong>Sophie Marleau</strong> → +20 € sur booking filleul</div>
+              <div class="feed-time">Hier</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════ ARTISTES ══════════ -->
+    <div class="section-view" id="view-artists">
+      <div class="section-header">
+        <div class="section-title">Gestion des <em>artistes</em></div>
+        <button class="tb-btn" style="color:var(--gold);border-color:rgba(201,168,76,0.3)">+ Ajouter manuellement</button>
+      </div>
+
+      <div class="panel">
+        <div class="tabs">
+          <button class="tab active" onclick="filterArtists('all',this)">Tous (494)</button>
+          <button class="tab" onclick="filterArtists('pending',this)">En attente (7)</button>
+          <button class="tab" onclick="filterArtists('approved',this)">Validés (487)</button>
+          <button class="tab" onclick="filterArtists('suspended',this)">Suspendus (0)</button>
+        </div>
+        <div class="search-bar">
+          <input class="search-input" type="text" placeholder="Rechercher par nom, catégorie, ville..."/>
+          <select class="filter-select">
+            <option>Toutes catégories</option>
+            <option>Comédiens</option><option>Magiciens</option><option>Musiciens</option>
+            <option>Danseurs</option><option>Conférenciers</option>
+          </select>
+          <select class="filter-select">
+            <option>Toutes villes</option>
+            <option>Paris</option><option>Lyon</option><option>Bordeaux</option><option>Marseille</option>
+          </select>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Artiste</th>
+                <th>Catégorie</th>
+                <th>Ville</th>
+                <th>Bookings</th>
+                <th>Tarif</th>
+                <th>Inscrit le</th>
+                <th>Statut</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="artistsTable">
+              <tr>
+                <td><span class="td-name">🎭 Sophie Marleau</span></td>
+                <td>Comédienne</td>
+                <td>Lyon</td>
+                <td>127</td>
+                <td class="td-amount">800–1 500 €</td>
+                <td class="td-mono">12/03/24</td>
+                <td><span class="badge badge-approved">Validé</span></td>
+                <td><div class="action-btns">
+                  <button class="act-btn" onclick="alert('Voir profil')">Profil</button>
+                  <button class="act-btn reject" onclick="alert('Suspension...')">Suspendre</button>
+                </div></td>
+              </tr>
+              <tr>
+                <td><span class="td-name">🎩 Léo Fantini</span></td>
+                <td>Magicien</td>
+                <td>Paris</td>
+                <td>89</td>
+                <td class="td-amount">600–1 200 €</td>
+                <td class="td-mono">05/06/24</td>
+                <td><span class="badge badge-approved">Validé</span></td>
+                <td><div class="action-btns">
+                  <button class="act-btn">Profil</button>
+                  <button class="act-btn reject" onclick="alert('Suspension...')">Suspendre</button>
+                </div></td>
+              </tr>
+              <tr>
+                <td><span class="td-name">🎭 Marc Dubois</span></td>
+                <td>Comédien</td>
+                <td>Paris</td>
+                <td>0</td>
+                <td class="td-amount">500–900 €</td>
+                <td class="td-mono">17/02/26</td>
+                <td><span class="badge badge-pending">En attente</span></td>
+                <td><div class="action-btns">
+                  <button class="act-btn approve" onclick="approveArtist(this)">✓ Valider</button>
+                  <button class="act-btn reject" onclick="rejectArtist(this)">✕ Refuser</button>
+                </div></td>
+              </tr>
+              <tr>
+                <td><span class="td-name">🎵 Clara Mezzo</span></td>
+                <td>Musicienne</td>
+                <td>Lyon</td>
+                <td>0</td>
+                <td class="td-amount">700–1 100 €</td>
+                <td class="td-mono">16/02/26</td>
+                <td><span class="badge badge-pending">En attente</span></td>
+                <td><div class="action-btns">
+                  <button class="act-btn approve" onclick="approveArtist(this)">✓ Valider</button>
+                  <button class="act-btn reject" onclick="rejectArtist(this)">✕ Refuser</button>
+                </div></td>
+              </tr>
+              <tr>
+                <td><span class="td-name">🤹 Arturo Flamini</span></td>
+                <td>Cirque</td>
+                <td>Marseille</td>
+                <td>0</td>
+                <td class="td-amount">1 000–2 000 €</td>
+                <td class="td-mono">15/02/26</td>
+                <td><span class="badge badge-pending">En attente</span></td>
+                <td><div class="action-btns">
+                  <button class="act-btn approve" onclick="approveArtist(this)">✓ Valider</button>
+                  <button class="act-btn reject" onclick="rejectArtist(this)">✕ Refuser</button>
+                </div></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════ ENTREPRISES ══════════ -->
+    <div class="section-view" id="view-companies">
+      <div class="section-header">
+        <div class="section-title">Gestion des <em>entreprises</em></div>
+      </div>
+      <div class="panel">
+        <div class="search-bar">
+          <input class="search-input" type="text" placeholder="Rechercher une entreprise..."/>
+          <select class="filter-select"><option>Tous secteurs</option><option>Industrie</option><option>Tech</option><option>Santé</option></select>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Entreprise</th><th>Secteur</th><th>Ville</th><th>Bookings</th><th>Total dépensé</th><th>Inscrit le</th><th>Statut</th><th>Actions</th></tr></thead>
+            <tbody>
+              <tr><td><span class="td-name">🏭 Salon Industrie Lyon</span></td><td>Industrie</td><td>Lyon</td><td>6</td><td class="td-amount">4 250 €</td><td class="td-mono">10/01/25</td><td><span class="badge badge-active">Actif</span></td><td><div class="action-btns"><button class="act-btn">Détails</button><button class="act-btn reject">Suspendre</button></div></td></tr>
+              <tr><td><span class="td-name">💡 Viva Tech Paris</span></td><td>Tech</td><td>Paris</td><td>3</td><td class="td-amount">2 800 €</td><td class="td-mono">15/03/25</td><td><span class="badge badge-active">Actif</span></td><td><div class="action-btns"><button class="act-btn">Détails</button><button class="act-btn reject">Suspendre</button></div></td></tr>
+              <tr><td><span class="td-name">🏬 Forum RH Bordeaux</span></td><td>RH</td><td>Bordeaux</td><td>2</td><td class="td-amount">1 650 €</td><td class="td-mono">20/06/25</td><td><span class="badge badge-active">Actif</span></td><td><div class="action-btns"><button class="act-btn">Détails</button><button class="act-btn reject">Suspendre</button></div></td></tr>
+              <tr><td><span class="td-name">🔬 BioFrance Congress</span></td><td>Santé</td><td>Paris</td><td>0</td><td class="td-amount">0 €</td><td class="td-mono">19/02/26</td><td><span class="badge badge-active">Actif</span></td><td><div class="action-btns"><button class="act-btn">Détails</button><button class="act-btn reject">Suspendre</button></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════ BOOKINGS ══════════ -->
+    <div class="section-view" id="view-bookings">
+      <div class="section-header">
+        <div class="section-title">Suivi des <em>bookings</em></div>
+        <div style="display:flex;gap:10px">
+          <button class="tb-btn">↓ Export CSV</button>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="tabs">
+          <button class="tab active">Tous (142)</button>
+          <button class="tab">En attente (3)</button>
+          <button class="tab">Payés (89)</button>
+          <button class="tab">Litiges (1)</button>
+          <button class="tab">Terminés (46)</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>#ID</th><th>Artiste</th><th>Entreprise</th><th>Date événement</th><th>Montant TTC</th><th>Commission</th><th>Parrainage</th><th>Statut</th><th>Actions</th></tr></thead>
+            <tbody>
+              <tr><td class="td-mono">#BK-1042</td><td>🎭 Sophie Marleau</td><td>Viva Tech</td><td>02/04/26</td><td class="td-amount">968 €</td><td style="color:var(--gold)">145 €</td><td style="color:var(--green)">-20 €</td><td><span class="badge badge-paid">Payé</span></td><td><div class="action-btns"><button class="act-btn">Voir</button></div></td></tr>
+              <tr><td class="td-mono">#BK-1041</td><td>🎩 Léo Fantini</td><td>Salon Agri</td><td>28/02/26</td><td class="td-amount">1 075 €</td><td style="color:var(--gold)">150 €</td><td style="color:var(--muted)">—</td><td><span class="badge badge-approved">Accepté</span></td><td><div class="action-btns"><button class="act-btn">Voir</button></div></td></tr>
+              <tr><td class="td-mono">#BK-1040</td><td>🎭 Sophie Marleau</td><td>Salon Industrie</td><td>14/03/26</td><td class="td-amount">1 290 €</td><td style="color:var(--gold)">173 €</td><td style="color:var(--green)">-24 €</td><td><span class="badge badge-pending">En attente</span></td><td><div class="action-btns"><button class="act-btn">Voir</button></div></td></tr>
+              <tr style="background:var(--ruby-glow)"><td class="td-mono">#BK-1038</td><td>🎵 The Brass Trio</td><td>BioFrance</td><td>10/01/26</td><td class="td-amount">1 397 €</td><td style="color:var(--gold)">188 €</td><td style="color:var(--muted)">—</td><td><span class="badge badge-disputed">Litige</span></td><td><div class="action-btns"><button class="act-btn reject" onclick="goto('litiges', document.querySelectorAll('.sb-item')[7])">⚠ Traiter</button></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════ TRANSACTIONS ══════════ -->
+    <div class="section-view" id="view-transactions">
+      <div class="section-header">
+        <div class="section-title">Revenus & <em>commissions</em></div>
+      </div>
+      <div class="grid2">
+        <div class="panel">
+          <div class="panel-head"><div class="panel-title">📊 Commissions par mois</div></div>
+          <div style="padding:8px 0">
+            <div class="commission-row"><div class="comm-month">Fév 2026</div><div class="comm-bar-wrap"><div class="comm-bar" style="width:82%"></div></div><div class="comm-amount">2 870 €</div><div class="comm-delta up">+34%</div></div>
+            <div class="commission-row"><div class="comm-month">Jan 2026</div><div class="comm-bar-wrap"><div class="comm-bar" style="width:63%"></div></div><div class="comm-amount">2 143 €</div><div class="comm-delta up">+12%</div></div>
+            <div class="commission-row"><div class="comm-month">Déc 2025</div><div class="comm-bar-wrap"><div class="comm-bar" style="width:55%"></div></div><div class="comm-amount">1 910 €</div><div class="comm-delta neu">=</div></div>
+            <div class="commission-row"><div class="comm-month">Nov 2025</div><div class="comm-bar-wrap"><div class="comm-bar" style="width:48%"></div></div><div class="comm-amount">1 680 €</div><div class="comm-delta down">-8%</div></div>
+            <div class="commission-row"><div class="comm-month">Oct 2025</div><div class="comm-bar-wrap"><div class="comm-bar" style="width:52%"></div></div><div class="comm-amount">1 820 €</div><div class="comm-delta up">+5%</div></div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><div class="panel-title">💸 Parrainage reversé</div></div>
+          <div style="padding:16px 18px">
+            <div style="margin-bottom:16px">
+              <div class="kpi-label" style="font-size:0.6rem">Total reversé aux parrains</div>
+              <div style="font-family:'Cormorant Garamond',serif;font-size:2.2rem;font-weight:700;color:var(--gold);margin:4px 0">1 240 €</div>
+              <div class="kpi-delta up">↑ +18% vs mois dernier</div>
+            </div>
+            <div style="height:1px;background:var(--border);margin:16px 0"></div>
+            <div style="font-size:0.7rem;color:var(--muted);line-height:1.8">
+              <div style="display:flex;justify-content:space-between"><span>Taux de commission parrain</span><strong style="color:var(--cream)">2%</strong></div>
+              <div style="display:flex;justify-content:space-between"><span>Parrains actifs</span><strong style="color:var(--cream)">34</strong></div>
+              <div style="display:flex;justify-content:space-between"><span>Filleuls actifs</span><strong style="color:var(--cream)">61</strong></div>
+              <div style="display:flex;justify-content:space-between"><span>Marge nette après parrainage</span><strong style="color:var(--gold)">~13%</strong></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════ LITIGES ══════════ -->
+    <div class="section-view" id="view-litiges">
+      <div class="section-header">
+        <div class="section-title">Gestion des <em>litiges</em></div>
+      </div>
+      <div class="alert-banner" style="margin-bottom:20px">
+        🚨 <strong>1 litige actif</strong> nécessite votre arbitrage — booking #BK-1038 · Ouvert depuis 5 jours
+      </div>
+      <div class="panel">
+        <div class="panel-head"><div class="panel-title">⚠️ Litiges actifs</div></div>
+        <div>
+          <div class="litige-card">
+            <div class="litige-title">
+              <span class="badge badge-disputed">Litige</span>
+              Booking #BK-1038 — The Brass Trio × BioFrance Congress
+            </div>
+            <div class="litige-meta">📅 Événement : 10 janv. 2026 · 💶 1 397 € en jeu · Ouvert le 15/01/26</div>
+            <div style="font-size:0.75rem;color:var(--muted);margin-bottom:12px;line-height:1.6">
+              <strong style="color:var(--cream)">Motif entreprise :</strong> La prestation n'a pas correspondu à la description (durée tronquée de 30 min).<br/>
+              <strong style="color:var(--cream)">Réponse artiste :</strong> La durée a été réduite à la demande de l'organisateur sur place.
+            </div>
+            <div class="litige-actions">
+              <button class="act-btn approve" onclick="resolveDispute(this, 'artist')">✓ Donner raison à l'artiste</button>
+              <button class="act-btn reject" onclick="resolveDispute(this, 'company')">✓ Donner raison à l'entreprise</button>
+              <button class="act-btn" onclick="alert('Remboursement partiel...')">⚖ Remboursement partiel</button>
+              <button class="act-btn" onclick="alert('Messagerie...')">💬 Contacter les parties</button>
+            </div>
+          </div>
+        </div>
+        <div class="panel-head" style="margin-top:4px"><div class="panel-title">✅ Litiges résolus (ce mois)</div></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>#Booking</th><th>Artiste</th><th>Entreprise</th><th>Montant</th><th>Résolution</th><th>Date</th></tr></thead>
+            <tbody>
+              <tr><td class="td-mono">#BK-1031</td><td>💃 Ana Torres</td><td>Pharma Expo</td><td class="td-amount">860 €</td><td><span class="badge badge-approved">Artiste</span></td><td class="td-mono">10/02/26</td></tr>
+              <tr><td class="td-mono">#BK-1024</td><td>😂 Karl Huber</td><td>AutoMechanika</td><td class="td-amount">1 100 €</td><td><span class="badge badge-approved">Remb. 50%</span></td><td class="td-mono">28/01/26</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════ PARRAINAGE ══════════ -->
+    <div class="section-view" id="view-referrals">
+      <div class="section-header">
+        <div class="section-title">Programme de <em>parrainage</em></div>
+      </div>
+      <div class="grid3">
+        <div class="kpi"><div class="kpi-label">Parrains actifs</div><div class="kpi-val">34</div><div class="kpi-delta up">↑ +5 ce mois</div></div>
+        <div class="kpi"><div class="kpi-label">Filleuls actifs</div><div class="kpi-val">61</div><div class="kpi-delta up">↑ +8 ce mois</div></div>
+        <div class="kpi"><div class="kpi-label">Total reversé</div><div class="kpi-val" style="color:var(--gold)">1 240 €</div><div class="kpi-delta up">+18%</div></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><div class="panel-title">🌐 Top parrains</div></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Parrain</th><th>Code</th><th>Filleuls</th><th>Bookings filleuls</th><th>Total gagné</th><th>Expire dans</th><th>Statut</th></tr></thead>
+            <tbody>
+              <tr><td><span class="td-name">🎭 Sophie Marleau</span></td><td class="td-mono">SOPHI-K4R2</td><td>2</td><td>7</td><td class="td-amount" style="color:var(--gold)">140 €</td><td>8–11 mois</td><td><span class="badge badge-active">Actif</span></td></tr>
+              <tr><td><span class="td-name">🎩 Léo Fantini</span></td><td class="td-mono">LEOFN-X7P1</td><td>3</td><td>12</td><td class="td-amount" style="color:var(--gold)">240 €</td><td>2–10 mois</td><td><span class="badge badge-active">Actif</span></td></tr>
+              <tr><td><span class="td-name">🎵 The Brass Trio</span></td><td class="td-mono">BRASS-M3Q9</td><td>1</td><td>4</td><td class="td-amount" style="color:var(--gold)">80 €</td><td>5 mois</td><td><span class="badge badge-active">Actif</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════ BLOG ══════════ -->
+    <div class="section-view" id="view-blog">
+      <div class="section-header">
+        <div class="section-title">Gestion du <em>blog</em></div>
+        <button class="tb-btn" style="color:var(--gold);border-color:rgba(201,168,76,0.3)" onclick="alert('Éditeur d\'article')">+ Nouvel article</button>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><div class="panel-title">📝 Articles</div></div>
+        <div>
+          <div class="blog-item">
+            <div style="font-size:1.8rem">🎭</div>
+            <div class="blog-info">
+              <div class="blog-title-t">Comment choisir le bon artiste pour votre salon professionnel ?</div>
+              <div class="blog-meta-t">Publié le 15/02/26 · 4 min de lecture · 342 vues</div>
+            </div>
+            <span class="badge badge-approved">Publié</span>
+            <div class="action-btns" style="margin-left:8px">
+              <button class="act-btn">Éditer</button>
+              <button class="act-btn reject">Dépublier</button>
+            </div>
+          </div>
+          <div class="blog-item">
+            <div style="font-size:1.8rem">💡</div>
+            <div class="blog-info">
+              <div class="blog-title-t">5 idées d'animations originales pour booster l'engagement de votre stand</div>
+              <div class="blog-meta-t">Publié le 02/02/26 · 6 min de lecture · 891 vues</div>
+            </div>
+            <span class="badge badge-approved">Publié</span>
+            <div class="action-btns" style="margin-left:8px">
+              <button class="act-btn">Éditer</button>
+              <button class="act-btn reject">Dépublier</button>
+            </div>
+          </div>
+          <div class="blog-item">
+            <div style="font-size:1.8rem">📋</div>
+            <div class="blog-info">
+              <div class="blog-title-t">ROI des animations événementielles : ce que disent les chiffres</div>
+              <div class="blog-meta-t">Brouillon · Dernière modif. 19/02/26</div>
+            </div>
+            <span class="badge badge-pending">Brouillon</span>
+            <div class="action-btns" style="margin-left:8px">
+              <button class="act-btn approve">Publier</button>
+              <button class="act-btn">Éditer</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════ CATÉGORIES ══════════ -->
+    <div class="section-view" id="view-categories">
+      <div class="section-header">
+        <div class="section-title">Gestion des <em>catégories</em></div>
+        <button class="tb-btn" style="color:var(--gold);border-color:rgba(201,168,76,0.3)">+ Nouvelle catégorie</button>
+      </div>
+      <div class="panel">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Catégorie</th><th>Artistes actifs</th><th>Bookings totaux</th><th>Visible</th><th>Actions</th></tr></thead>
+            <tbody>
+              <tr><td><span class="td-name">🎭 Comédiens</span></td><td>87</td><td>312</td><td><div class="toggle-wrap"><div class="toggle on" onclick="this.classList.toggle('on')"></div></div></td><td><div class="action-btns"><button class="act-btn">Éditer</button></div></td></tr>
+              <tr><td><span class="td-name">🎩 Magiciens</span></td><td>54</td><td>198</td><td><div class="toggle-wrap"><div class="toggle on" onclick="this.classList.toggle('on')"></div></div></td><td><div class="action-btns"><button class="act-btn">Éditer</button></div></td></tr>
+              <tr><td><span class="td-name">🎵 Musiciens</span></td><td>123</td><td>445</td><td><div class="toggle-wrap"><div class="toggle on" onclick="this.classList.toggle('on')"></div></div></td><td><div class="action-btns"><button class="act-btn">Éditer</button></div></td></tr>
+              <tr><td><span class="td-name">💃 Danseurs</span></td><td>68</td><td>156</td><td><div class="toggle-wrap"><div class="toggle on" onclick="this.classList.toggle('on')"></div></div></td><td><div class="action-btns"><button class="act-btn">Éditer</button></div></td></tr>
+              <tr><td><span class="td-name">🤹 Cirque</span></td><td>29</td><td>87</td><td><div class="toggle-wrap"><div class="toggle on" onclick="this.classList.toggle('on')"></div></div></td><td><div class="action-btns"><button class="act-btn">Éditer</button></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════ PARAMÈTRES ══════════ -->
+    <div class="section-view" id="view-settings">
+      <div class="section-header">
+        <div class="section-title"><em>Paramètres</em> plateforme</div>
+        <button class="tb-btn approve" style="border-color:rgba(39,174,96,0.3);color:var(--green)" onclick="alert('Paramètres sauvegardés !')">✓ Sauvegarder</button>
+      </div>
+      <div class="grid2">
+        <div class="panel">
+          <div class="panel-head"><div class="panel-title">💶 Modèle économique</div></div>
+          <div style="padding:18px">
+            <div style="margin-bottom:16px">
+              <div class="kpi-label" style="font-size:0.62rem;margin-bottom:6px">Taux de commission global (%)</div>
+              <input type="number" value="15" min="5" max="30" style="width:100%;background:var(--card2);border:1px solid var(--border);color:var(--cream);padding:10px 14px;font-family:'Syne',sans-serif;font-size:0.85rem;outline:none"/>
+              <div style="font-size:0.65rem;color:var(--muted);margin-top:5px">Partagé : 7,5% entreprise + 7,5% artiste</div>
+            </div>
+            <div style="margin-bottom:16px">
+              <div class="kpi-label" style="font-size:0.62rem;margin-bottom:6px">Taux de parrainage (%)</div>
+              <input type="number" value="2" min="0" max="10" style="width:100%;background:var(--card2);border:1px solid var(--border);color:var(--cream);padding:10px 14px;font-family:'Syne',sans-serif;font-size:0.85rem;outline:none"/>
+            </div>
+            <div>
+              <div class="kpi-label" style="font-size:0.62rem;margin-bottom:6px">Durée parrainage (mois)</div>
+              <input type="number" value="12" min="1" max="36" style="width:100%;background:var(--card2);border:1px solid var(--border);color:var(--cream);padding:10px 14px;font-family:'Syne',sans-serif;font-size:0.85rem;outline:none"/>
+            </div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><div class="panel-title">⚙ Options plateforme</div></div>
+          <div style="padding:18px">
+            <div style="display:flex;flex-direction:column;gap:14px">
+              <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:14px;border-bottom:1px solid var(--border)">
+                <div><div style="font-size:0.8rem;font-weight:600;margin-bottom:2px">Mode maintenance</div><div style="font-size:0.65rem;color:var(--muted)">Affiche une page de maintenance</div></div>
+                <div class="toggle" onclick="this.classList.toggle('on')"></div>
+              </div>
+              <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:14px;border-bottom:1px solid var(--border)">
+                <div><div style="font-size:0.8rem;font-weight:600;margin-bottom:2px">Inscriptions ouvertes</div><div style="font-size:0.65rem;color:var(--muted)">Autoriser les nouvelles inscriptions</div></div>
+                <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+              </div>
+              <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:14px;border-bottom:1px solid var(--border)">
+                <div><div style="font-size:0.8rem;font-weight:600;margin-bottom:2px">Validation manuelle artistes</div><div style="font-size:0.65rem;color:var(--muted)">Valider manuellement chaque profil</div></div>
+                <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+              </div>
+              <div style="display:flex;align-items:center;justify-content:space-between">
+                <div><div style="font-size:0.8rem;font-weight:600;margin-bottom:2px">Emails automatiques</div><div style="font-size:0.65rem;color:var(--muted)">Confirmations et notifications</div></div>
+                <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<script>
+  // ── NAVIGATION ──
+  const titles = {
+    dashboard:    ['Vue d\'ensemble',       'Admin / Tableau de bord'],
+    artists:      ['Artistes',              'Admin / Artistes'],
+    companies:    ['Entreprises',           'Admin / Entreprises'],
+    bookings:     ['Bookings',              'Admin / Bookings'],
+    transactions: ['Transactions',          'Admin / Transactions'],
+    litiges:      ['Litiges',               'Admin / Litiges'],
+    referrals:    ['Parrainage',            'Admin / Parrainage'],
+    blog:         ['Blog',                  'Admin / Blog'],
+    categories:   ['Catégories',            'Admin / Catégories'],
+    settings:     ['Paramètres',            'Admin / Paramètres'],
+  };
+
+  function goto(section, navEl) {
+    document.querySelectorAll('.section-view').forEach(v => v.classList.remove('active'));
+    document.getElementById('view-' + section)?.classList.add('active');
+    document.querySelectorAll('.sb-item').forEach(i => i.classList.remove('active'));
+    if (navEl) navEl.classList.add('active');
+    const t = titles[section] || ['', ''];
+    document.getElementById('page-title').textContent = t[0];
+    document.getElementById('page-path').textContent  = t[1];
+  }
+
+  // ── REVENUE CHART ──
+  const months = ['Jan','Fév','Mar','Apr','Mai','Jun','Jul','Aou','Sep','Oct','Nov','Déc'];
+  const revenues = [2143, 2870, 0,0,0,0,0,0,0,0,0,0];
+  const max = 3500;
+  const chartEl = document.getElementById('chartBars');
+  months.forEach((m, i) => {
+    const h = revenues[i] ? Math.max(8, Math.round((revenues[i]/max)*100)) : 4;
+    const col = revenues[i] ? `rgba(201,168,76,${0.1 + (revenues[i]/max)*0.4})` : 'rgba(255,255,255,0.04)';
+    chartEl.innerHTML += `
+      <div class="bar-group">
+        <div class="bar" style="height:${h}px;background:${col}" title="${revenues[i] ? revenues[i]+'€' : 'N/A'}"></div>
+        <div class="bar-label">${m}</div>
+      </div>`;
+  });
+
+  // ── CATEGORY BARS ──
+  const cats = [
+    { name:'🎵 Musiciens', pct:32, col:'#5b8cf5' },
+    { name:'🎭 Comédiens', pct:24, col:'#c9a84c' },
+    { name:'🎩 Magiciens', pct:18, col:'#27ae60' },
+    { name:'💃 Danseurs',  pct:14, col:'#e67e22' },
+    { name:'🤹 Cirque',    pct:12, col:'#c0392b' },
+  ];
+  const catEl = document.getElementById('catBars');
+  cats.forEach(c => {
+    catEl.innerHTML += `
+      <div style="margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;font-size:0.68rem;margin-bottom:5px">
+          <span>${c.name}</span><span style="color:${c.col};font-weight:600">${c.pct}%</span>
+        </div>
+        <div style="height:4px;background:var(--surface);border:1px solid var(--border)">
+          <div style="height:100%;background:${c.col};width:${c.pct}%;transition:width 1.2s ease"></div>
+        </div>
+      </div>`;
+  });
+
+  // ── ACTIONS ──
+  function approveArtist(btn) {
+    const row = btn.closest('tr') || btn.closest('.validation-card');
+    const badge = row?.querySelector('.badge');
+    if (badge) { badge.className = 'badge badge-approved'; badge.textContent = ''; badge.setAttribute('data-status','Validé'); }
+    if (badge) badge.textContent = 'Validé';
+    const actBtns = row?.querySelector('.action-btns');
+    if (actBtns) actBtns.innerHTML = '<button class="act-btn">Profil</button><button class="act-btn reject" onclick="alert(\'Suspension...\')">Suspendre</button>';
+    showToast('✓ Artiste validé avec succès — email de confirmation envoyé', 'green');
+    updatePendingCount(-1);
+  }
+
+  function rejectArtist(btn) {
+    const row = btn.closest('tr') || btn.closest('.validation-card');
+    if (row) row.style.opacity = '0.4';
+    showToast('✕ Profil refusé — l\'artiste sera notifié', 'ruby');
+    updatePendingCount(-1);
+  }
+
+  function resolveDispute(btn, winner) {
+    showToast(winner === 'artist'
+      ? '✓ Litige résolu en faveur de l\'artiste'
+      : '✓ Litige résolu en faveur de l\'entreprise', 'green');
+    btn.closest('.litige-card').style.opacity = '0.5';
+  }
+
+  function updatePendingCount(delta) {
+    const badge = document.querySelector('.sb-item:nth-child(5) .sb-badge');
+    if (badge) {
+      const v = Math.max(0, parseInt(badge.textContent) + delta);
+      badge.textContent = v;
+      if (v === 0) badge.remove();
+    }
+  }
+
+  function showToast(msg, color) {
+    const t = document.createElement('div');
+    const bg = color === 'green' ? 'var(--green)' : 'var(--ruby)';
+    t.style.cssText = `position:fixed;bottom:24px;right:24px;background:${bg};color:#fff;padding:12px 22px;font-family:'Syne',sans-serif;font-size:0.75rem;font-weight:600;letter-spacing:0.06em;z-index:9999;box-shadow:0 4px 24px rgba(0,0,0,0.4);animation:fadeIn .3s ease;border-radius:1px;`;
+    t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 3500);
+  }
+
+  // ── LIVE FEED simulé ──
+  let feedCount = 0;
+  const feedEvents = [
+    { col:'var(--green)', msg:'Booking <strong>#BK-1043</strong> créé — nouveau devis envoyé à Clara Mezzo' },
+    { col:'var(--amber)', msg:'Nouvel artiste inscrit : <strong>Zara Vidal</strong> — en attente de validation' },
+    { col:'var(--blue)',  msg:'Nouvelle entreprise inscrite : <strong>TechExpo Nantes</strong>' },
+  ];
+  setInterval(() => {
+    const feed = document.getElementById('activityFeed');
+    if (!feed || feed.children.length > 8) return;
+    const ev = feedEvents[feedCount % feedEvents.length];
+    const now = new Date(); const time = `${now.getHours()}:${String(now.getMinutes()).padStart(2,'0')}`;
+    const item = document.createElement('div');
+    item.className = 'feed-item';
+    item.style.animation = 'fadeIn .4s ease';
+    item.innerHTML = `<div class="feed-dot" style="background:${ev.col}"></div><div class="feed-text">${ev.msg}</div><div class="feed-time">${time}</div>`;
+    feed.insertBefore(item, feed.firstChild);
+    if (feed.children.length > 7) feed.lastChild.remove();
+    feedCount++;
+  }, 8000);
+
+  // Tabs
+  document.querySelectorAll('.tab').forEach(t => {
+    t.addEventListener('click', () => {
+      t.closest('.tabs').querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+      t.classList.add('active');
+    });
+  });
+</script>
+</body>
+</html>

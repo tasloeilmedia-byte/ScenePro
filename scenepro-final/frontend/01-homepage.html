@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Scène Pro — Artistes & Salons Professionnels</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --black: #080808;
+      --deep: #0f0f0f;
+      --card: #141414;
+      --border: rgba(255,255,255,0.07);
+      --gold: #c9a84c;
+      --gold-light: #e8c97a;
+      --white: #f5f0e8;
+      --muted: rgba(245,240,232,0.45);
+      --accent: #d45f3c;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--black);
+      color: var(--white);
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 300;
+      overflow-x: hidden;
+      cursor: none;
+    }
+
+    /* CURSOR */
+    .cursor {
+      width: 10px; height: 10px;
+      background: var(--gold);
+      border-radius: 50%;
+      position: fixed;
+      pointer-events: none;
+      z-index: 9999;
+      transform: translate(-50%, -50%);
+      transition: transform 0.1s, width 0.3s, height 0.3s, background 0.3s;
+      mix-blend-mode: difference;
+    }
+    .cursor-ring {
+      width: 36px; height: 36px;
+      border: 1px solid var(--gold);
+      border-radius: 50%;
+      position: fixed;
+      pointer-events: none;
+      z-index: 9998;
+      transform: translate(-50%, -50%);
+      transition: transform 0.18s ease-out, width 0.3s, height 0.3s, opacity 0.3s;
+      opacity: 0.5;
+    }
+
+    /* NOISE OVERLAY */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 1000;
+      opacity: 0.4;
+    }
+
+    /* NAV */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      padding: 28px 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid transparent;
+      transition: border-color 0.4s, background 0.4s;
+    }
+    nav.scrolled {
+      background: rgba(8,8,8,0.92);
+      border-color: var(--border);
+      backdrop-filter: blur(12px);
+    }
+    .logo {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      color: var(--white);
+      text-decoration: none;
+    }
+    .logo span { color: var(--gold); }
+    .nav-links {
+      display: flex;
+      gap: 40px;
+      list-style: none;
+    }
+    .nav-links a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.85rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      transition: color 0.3s;
+    }
+    .nav-links a:hover { color: var(--white); }
+    .nav-ctas { display: flex; gap: 16px; align-items: center; }
+    .btn-ghost {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--white);
+      padding: 10px 22px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.82rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      cursor: none;
+      transition: border-color 0.3s, color 0.3s;
+      text-decoration: none;
+    }
+    .btn-ghost:hover { border-color: var(--gold); color: var(--gold); }
+    .btn-gold {
+      background: var(--gold);
+      border: 1px solid var(--gold);
+      color: var(--black);
+      padding: 10px 22px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.82rem;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      cursor: none;
+      transition: background 0.3s, color 0.3s;
+      text-decoration: none;
+    }
+    .btn-gold:hover { background: var(--gold-light); }
+
+    /* HERO */
+    .hero {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero-left {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 140px 60px 100px;
+      position: relative;
+      z-index: 2;
+    }
+    .hero-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 40px;
+      font-size: 0.75rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--gold);
+    }
+    .hero-tag::before {
+      content: '';
+      display: block;
+      width: 32px; height: 1px;
+      background: var(--gold);
+    }
+    h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(3rem, 5vw, 5.2rem);
+      font-weight: 900;
+      line-height: 1.06;
+      letter-spacing: -0.02em;
+      margin-bottom: 32px;
+    }
+    h1 em {
+      font-style: italic;
+      color: var(--gold);
+    }
+    .hero-desc {
+      font-size: 1.05rem;
+      color: var(--muted);
+      line-height: 1.75;
+      max-width: 420px;
+      margin-bottom: 52px;
+    }
+    .hero-actions { display: flex; gap: 16px; flex-wrap: wrap; }
+    .btn-large {
+      padding: 16px 36px;
+      font-size: 0.9rem;
+    }
+    .hero-stats {
+      display: flex;
+      gap: 40px;
+      margin-top: 72px;
+      padding-top: 40px;
+      border-top: 1px solid var(--border);
+    }
+    .stat-item {}
+    .stat-num {
+      font-family: 'Playfair Display', serif;
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--white);
+    }
+    .stat-label {
+      font-size: 0.75rem;
+      color: var(--muted);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-top: 4px;
+    }
+
+    /* HERO RIGHT — visual stage */
+    .hero-right {
+      position: relative;
+      overflow: hidden;
+    }
+    .hero-right::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, #1a0f00 0%, #0a0a0a 50%, #0d0510 100%);
+    }
+    .stage-light {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      pointer-events: none;
+    }
+    .sl1 {
+      width: 400px; height: 400px;
+      background: radial-gradient(circle, rgba(201,168,76,0.18) 0%, transparent 70%);
+      top: 10%; left: 20%;
+      animation: pulse1 4s ease-in-out infinite alternate;
+    }
+    .sl2 {
+      width: 300px; height: 300px;
+      background: radial-gradient(circle, rgba(212,95,60,0.12) 0%, transparent 70%);
+      bottom: 20%; right: 10%;
+      animation: pulse2 5s ease-in-out infinite alternate;
+    }
+    @keyframes pulse1 { from { opacity: 0.7; transform: scale(1); } to { opacity: 1; transform: scale(1.1); } }
+    @keyframes pulse2 { from { opacity: 0.5; transform: scale(1.05); } to { opacity: 0.9; transform: scale(0.95); } }
+
+    .floating-cards {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .profile-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      padding: 20px 24px;
+      position: absolute;
+      backdrop-filter: blur(8px);
+      min-width: 220px;
+      animation: float 6s ease-in-out infinite;
+    }
+    .profile-card:nth-child(1) {
+      top: 18%; left: 8%;
+      animation-delay: 0s;
+      transform: rotate(-3deg);
+    }
+    .profile-card:nth-child(2) {
+      top: 38%; right: 6%;
+      animation-delay: -2s;
+      transform: rotate(2deg);
+    }
+    .profile-card:nth-child(3) {
+      bottom: 18%; left: 15%;
+      animation-delay: -4s;
+      transform: rotate(-1.5deg);
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(0) rotate(var(--r, -3deg)); }
+      50% { transform: translateY(-12px) rotate(var(--r, -3deg)); }
+    }
+    .pc-avatar {
+      width: 42px; height: 42px;
+      border-radius: 50%;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+    }
+    .pc-name {
+      font-family: 'Playfair Display', serif;
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 2px;
+    }
+    .pc-cat {
+      font-size: 0.72rem;
+      color: var(--gold);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+    .pc-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+    .pc-tag {
+      font-size: 0.68rem;
+      padding: 3px 8px;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      letter-spacing: 0.04em;
+    }
+    .pc-price {
+      margin-top: 12px;
+      font-size: 0.8rem;
+      color: var(--gold-light);
+    }
+
+    /* DIAGONAL DIVIDER */
+    .divider-diagonal {
+      height: 80px;
+      background: var(--deep);
+      clip-path: polygon(0 0, 100% 40%, 100% 100%, 0 100%);
+      margin-top: -1px;
+    }
+
+    /* SECTION */
+    section { padding: 100px 60px; background: var(--deep); }
+    section:nth-child(even) { background: var(--black); }
+
+    .section-tag {
+      font-size: 0.72rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .section-tag::before { content: ''; display: block; width: 24px; height: 1px; background: var(--gold); }
+
+    h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2rem, 3.5vw, 3.2rem);
+      font-weight: 800;
+      line-height: 1.12;
+      letter-spacing: -0.02em;
+      margin-bottom: 20px;
+    }
+    h2 em { font-style: italic; color: var(--gold); }
+
+    /* HOW IT WORKS */
+    .how-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2px;
+      margin-top: 64px;
+    }
+    .how-step {
+      background: var(--card);
+      padding: 48px 36px;
+      position: relative;
+      overflow: hidden;
+      transition: background 0.3s;
+    }
+    .how-step:hover { background: #1a1a1a; }
+    .how-step::before {
+      content: attr(data-num);
+      position: absolute;
+      top: -20px; right: 24px;
+      font-family: 'Playfair Display', serif;
+      font-size: 7rem;
+      font-weight: 900;
+      color: rgba(201,168,76,0.04);
+      line-height: 1;
+      pointer-events: none;
+    }
+    .how-icon {
+      font-size: 2rem;
+      margin-bottom: 24px;
+      display: block;
+    }
+    .how-step h3 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+    .how-step p { font-size: 0.9rem; color: var(--muted); line-height: 1.7; }
+
+    /* CATEGORIES */
+    .cat-section { overflow: hidden; }
+    .cat-scroll {
+      display: flex;
+      gap: 16px;
+      margin-top: 56px;
+      overflow-x: auto;
+      padding-bottom: 16px;
+      scrollbar-width: none;
+    }
+    .cat-scroll::-webkit-scrollbar { display: none; }
+    .cat-card {
+      flex: 0 0 200px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      padding: 32px 24px;
+      text-align: center;
+      cursor: none;
+      transition: border-color 0.3s, transform 0.3s;
+      position: relative;
+      overflow: hidden;
+    }
+    .cat-card::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 2px;
+      background: var(--gold);
+      transform: scaleX(0);
+      transition: transform 0.3s;
+    }
+    .cat-card:hover { border-color: rgba(201,168,76,0.3); transform: translateY(-4px); }
+    .cat-card:hover::after { transform: scaleX(1); }
+    .cat-emoji { font-size: 2.4rem; display: block; margin-bottom: 12px; }
+    .cat-name { font-family: 'Playfair Display', serif; font-size: 1rem; font-weight: 700; }
+    .cat-count { font-size: 0.72rem; color: var(--muted); margin-top: 6px; letter-spacing: 0.06em; }
+
+    /* DUAL CTA */
+    .dual-cta {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2px;
+      margin-top: 64px;
+    }
+    .cta-card {
+      padding: 72px 56px;
+      position: relative;
+      overflow: hidden;
+      cursor: none;
+    }
+    .cta-card.artist-side {
+      background: linear-gradient(135deg, #1a1200 0%, #0f0c00 100%);
+      border: 1px solid rgba(201,168,76,0.15);
+    }
+    .cta-card.company-side {
+      background: linear-gradient(135deg, #0a0a14 0%, #060610 100%);
+      border: 1px solid rgba(100,100,200,0.1);
+    }
+    .cta-card h3 {
+      font-family: 'Playfair Display', serif;
+      font-size: 2rem;
+      font-weight: 800;
+      margin-bottom: 16px;
+      line-height: 1.1;
+    }
+    .cta-card p { color: var(--muted); line-height: 1.7; margin-bottom: 36px; font-size: 0.95rem; }
+    .cta-glow {
+      position: absolute;
+      width: 300px; height: 300px;
+      border-radius: 50%;
+      filter: blur(100px);
+      pointer-events: none;
+      top: -50px; right: -50px;
+    }
+    .artist-side .cta-glow { background: rgba(201,168,76,0.08); }
+    .company-side .cta-glow { background: rgba(100,100,220,0.06); }
+
+    /* COMMISSION BADGE */
+    .commission-banner {
+      background: var(--gold);
+      color: var(--black);
+      text-align: center;
+      padding: 20px 60px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+    }
+    .commission-banner strong { font-weight: 700; }
+
+    /* FOOTER */
+    footer {
+      background: var(--black);
+      border-top: 1px solid var(--border);
+      padding: 60px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .footer-logo {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.3rem;
+      font-weight: 700;
+    }
+    .footer-logo span { color: var(--gold); }
+    .footer-copy { font-size: 0.78rem; color: var(--muted); }
+    .footer-links { display: flex; gap: 28px; }
+    .footer-links a { font-size: 0.78rem; color: var(--muted); text-decoration: none; transition: color 0.3s; letter-spacing: 0.06em; }
+    .footer-links a:hover { color: var(--gold); }
+
+    /* ANIMATIONS */
+    .fade-up {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+    .fade-up.visible { opacity: 1; transform: translateY(0); }
+
+    /* RESPONSIVE */
+    @media (max-width: 900px) {
+      nav { padding: 24px 24px; }
+      .nav-links { display: none; }
+      .hero { grid-template-columns: 1fr; }
+      .hero-right { display: none; }
+      .hero-left { padding: 120px 24px 80px; }
+      section { padding: 72px 24px; }
+      .how-grid { grid-template-columns: 1fr; gap: 2px; }
+      .dual-cta { grid-template-columns: 1fr; }
+      footer { flex-direction: column; gap: 24px; text-align: center; }
+      .footer-links { flex-wrap: wrap; justify-content: center; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="cursor" id="cursor"></div>
+  <div class="cursor-ring" id="cursorRing"></div>
+
+  <!-- NAV -->
+  <nav id="nav">
+    <a href="#" class="logo">Scène<span>Pro</span></a>
+    <ul class="nav-links">
+      <li><a href="#comment">Comment ça marche</a></li>
+      <li><a href="#categories">Catégories</a></li>
+      <li><a href="#artistes">Pour les artistes</a></li>
+      <li><a href="#entreprises">Pour les entreprises</a></li>
+    </ul>
+    <div class="nav-ctas">
+      <a href="#" class="btn-ghost">Se connecter</a>
+      <a href="#" class="btn-gold">Rejoindre</a>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero" style="padding:0; background: var(--black);">
+    <div class="hero-left">
+      <div class="hero-tag">La plateforme des salons professionnels</div>
+      <h1>Le talent<br/>au service de<br/><em>votre salon.</em></h1>
+      <p class="hero-desc">Connectez artistes d'exception et entreprises ambitieuses. Bookez en quelques clics le performer parfait pour sublimer votre prochain salon professionnel.</p>
+      <div class="hero-actions">
+        <a href="#" class="btn-gold btn-large">Je suis une entreprise</a>
+        <a href="#" class="btn-ghost btn-large">Je suis artiste</a>
+      </div>
+      <div class="hero-stats">
+        <div class="stat-item">
+          <div class="stat-num">500+</div>
+          <div class="stat-label">Artistes vérifiés</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-num">1 200+</div>
+          <div class="stat-label">Salons animés</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-num">98%</div>
+          <div class="stat-label">Satisfaction client</div>
+        </div>
+      </div>
+    </div>
+    <div class="hero-right">
+      <div class="stage-light sl1"></div>
+      <div class="stage-light sl2"></div>
+      <div class="floating-cards">
+        <div class="profile-card">
+          <div class="pc-avatar" style="background:#1e1500;">🎭</div>
+          <div class="pc-name">Sophie Marleau</div>
+          <div class="pc-cat">Comédienne</div>
+          <div class="pc-tags">
+            <span class="pc-tag">Improvisation</span>
+            <span class="pc-tag">Animation</span>
+          </div>
+          <div class="pc-price">À partir de 800€</div>
+        </div>
+        <div class="profile-card">
+          <div class="pc-avatar" style="background:#0f0f1e;">🎩</div>
+          <div class="pc-name">Léo Fantini</div>
+          <div class="pc-cat">Magicien</div>
+          <div class="pc-tags">
+            <span class="pc-tag">Corporate</span>
+            <span class="pc-tag">Close-up</span>
+          </div>
+          <div class="pc-price">À partir de 600€</div>
+        </div>
+        <div class="profile-card">
+          <div class="pc-avatar" style="background:#001810;">🎸</div>
+          <div class="pc-name">The Brass Trio</div>
+          <div class="pc-cat">Musiciens</div>
+          <div class="pc-tags">
+            <span class="pc-tag">Jazz</span>
+            <span class="pc-tag">Cocktail</span>
+          </div>
+          <div class="pc-price">À partir de 1 200€</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- COMMISSION BANNER -->
+  <div class="commission-banner">
+    ✦ &nbsp; Commission transparente : <strong>7,5% partagés</strong> entre artiste et entreprise &nbsp; · &nbsp; Paiement 100% sécurisé via Stripe &nbsp; · &nbsp; Zéro frais cachés &nbsp; ✦
+  </div>
+
+  <!-- HOW IT WORKS -->
+  <section id="comment">
+    <div class="section-tag">Le processus</div>
+    <h2>Simple. Rapide.<br/><em>Efficace.</em></h2>
+    <div class="how-grid">
+      <div class="how-step fade-up" data-num="01">
+        <span class="how-icon">🔍</span>
+        <h3>Cherchez & filtrez</h3>
+        <p>Parcourez des centaines de profils d'artistes vérifiés. Filtrez par catégorie, ville, budget et disponibilité pour trouver le talent qui correspond parfaitement à votre événement.</p>
+      </div>
+      <div class="how-step fade-up" data-num="02" style="transition-delay:0.15s">
+        <span class="how-icon">💬</span>
+        <h3>Échangez & bookez</h3>
+        <p>Envoyez votre demande directement via la messagerie intégrée. Discutez des détails, négociez et confirmez le booking en quelques messages.</p>
+      </div>
+      <div class="how-step fade-up" data-num="03" style="transition-delay:0.3s">
+        <span class="how-icon">✨</span>
+        <h3>Payez & profitez</h3>
+        <p>Le paiement sécurisé est libéré à la confirmation. L'artiste est protégé, vous aussi. Plus qu'à accueillir votre public et laisser la magie opérer.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- CATEGORIES -->
+  <section id="categories" style="background:var(--black);">
+    <div class="section-tag">Tous les talents</div>
+    <h2>Trouvez votre<br/><em>performer idéal</em></h2>
+    <div class="cat-scroll">
+      <div class="cat-card fade-up">
+        <span class="cat-emoji">🎭</span>
+        <div class="cat-name">Comédiens</div>
+        <div class="cat-count">87 artistes</div>
+      </div>
+      <div class="cat-card fade-up">
+        <span class="cat-emoji">🎩</span>
+        <div class="cat-name">Magiciens</div>
+        <div class="cat-count">54 artistes</div>
+      </div>
+      <div class="cat-card fade-up">
+        <span class="cat-emoji">🎵</span>
+        <div class="cat-name">Musiciens</div>
+        <div class="cat-count">123 artistes</div>
+      </div>
+      <div class="cat-card fade-up">
+        <span class="cat-emoji">💃</span>
+        <div class="cat-name">Danseurs</div>
+        <div class="cat-count">68 artistes</div>
+      </div>
+      <div class="cat-card fade-up">
+        <span class="cat-emoji">🎤</span>
+        <div class="cat-name">Conférenciers</div>
+        <div class="cat-count">41 artistes</div>
+      </div>
+      <div class="cat-card fade-up">
+        <span class="cat-emoji">🎨</span>
+        <div class="cat-name">Artistes visuels</div>
+        <div class="cat-count">35 artistes</div>
+      </div>
+      <div class="cat-card fade-up">
+        <span class="cat-emoji">🤹</span>
+        <div class="cat-name">Artistes de cirque</div>
+        <div class="cat-count">29 artistes</div>
+      </div>
+      <div class="cat-card fade-up">
+        <span class="cat-emoji">😂</span>
+        <div class="cat-name">Humoristes</div>
+        <div class="cat-count">47 artistes</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DUAL CTA -->
+  <section id="artistes" style="padding: 100px 0; background: var(--deep);">
+    <div style="padding: 0 60px; margin-bottom: 64px;">
+      <div class="section-tag">Rejoignez la plateforme</div>
+      <h2>Pour chacun,<br/><em>une porte d'entrée.</em></h2>
+    </div>
+    <div class="dual-cta" style="margin-top:0;">
+      <div class="cta-card artist-side fade-up">
+        <div class="cta-glow"></div>
+        <div style="font-size:3rem; margin-bottom:24px;">🎭</div>
+        <h3>Vous êtes<br/>artiste ?</h3>
+        <p>Créez votre profil vitrine, définissez vos tarifs et recevez des demandes de booking qualifiées d'entreprises qui cherchent exactement votre talent.</p>
+        <a href="#" class="btn-gold btn-large">Créer mon profil artiste</a>
+        <div style="margin-top:24px; font-size:0.78rem; color:var(--muted);">✓ Inscription gratuite &nbsp;·&nbsp; ✓ Profil validé sous 48h &nbsp;·&nbsp; ✓ Programme de parrainage</div>
+      </div>
+      <div class="cta-card company-side fade-up" id="entreprises" style="transition-delay:0.15s">
+        <div class="cta-glow"></div>
+        <div style="font-size:3rem; margin-bottom:24px;">🏢</div>
+        <h3>Vous organisez<br/>un salon pro ?</h3>
+        <p>Trouvez l'artiste parfait en quelques minutes. Filtrez, contactez, bookez et payez en toute sécurité. Votre événement mérite une animation d'exception.</p>
+        <a href="#" class="btn-ghost btn-large" style="border-color:rgba(100,100,200,0.4); color:var(--white);">Trouver un artiste</a>
+        <div style="margin-top:24px; font-size:0.78rem; color:var(--muted);">✓ Accès gratuit &nbsp;·&nbsp; ✓ Paiement sécurisé &nbsp;·&nbsp; ✓ Support dédié</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-logo">Scène<span>Pro</span></div>
+    <div class="footer-links">
+      <a href="#">Mentions légales</a>
+      <a href="#">CGU</a>
+      <a href="#">Blog</a>
+      <a href="#">Contact</a>
+    </div>
+    <div class="footer-copy">© 2025 ScènePro — Tous droits réservés</div>
+  </footer>
+
+  <script>
+    // CURSOR
+    const cursor = document.getElementById('cursor');
+    const ring = document.getElementById('cursorRing');
+    let mx = 0, my = 0, rx = 0, ry = 0;
+    document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; cursor.style.left = mx+'px'; cursor.style.top = my+'px'; });
+    function animRing() { rx += (mx - rx) * 0.12; ry += (my - ry) *.12; ring.style.left = rx+'px'; ring.style.top = ry+'px'; requestAnimationFrame(animRing); }
+    animRing();
+
+    // NAV SCROLL
+    window.addEventListener('scroll', () => {
+      document.getElementById('nav').classList.toggle('scrolled', window.scrollY > 60);
+    });
+
+    // FADE UP on scroll
+    const faders = document.querySelectorAll('.fade-up');
+    const obs = new IntersectionObserver(entries => {
+      entries.forEach(e => { if(e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); } });
+    }, { threshold: 0.15 });
+    faders.forEach(f => obs.observe(f));
+  </script>
+</body>
+</html>

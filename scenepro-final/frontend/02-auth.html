@@ -1,0 +1,1284 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Connexion — ScènePro</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400;1,600;1,700&family=Syne:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #07080a;
+      --surface: #0d0f13;
+      --card: #111418;
+      --border: rgba(255,255,255,0.07);
+      --gold: #c9a84c;
+      --gold-dim: rgba(201,168,76,0.12);
+      --gold-glow: rgba(201,168,76,0.06);
+      --gold-light: #e8c97a;
+      --cream: #ede8df;
+      --muted: rgba(237,232,223,0.45);
+      --muted2: rgba(237,232,223,0.2);
+      --blue: #5b8cf5;
+      --blue-dim: rgba(91,140,245,0.12);
+      --green: #4caf7d;
+      --red: #e05555;
+      --error: rgba(224,85,85,0.12);
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--cream);
+      font-family: 'Syne', sans-serif;
+      overflow: hidden;
+    }
+
+    /* ══════════════════════════════════
+       LAYOUT SPLIT
+    ══════════════════════════════════ */
+    .wrapper {
+      display: grid;
+      grid-template-columns: 1fr 480px;
+      height: 100vh;
+    }
+
+    /* ══════════════════════════════════
+       LEFT — STAGE PANEL
+    ══════════════════════════════════ */
+    .stage {
+      position: relative;
+      overflow: hidden;
+      background: #07080a;
+    }
+
+    /* Fond scène */
+    .stage-bg {
+      position: absolute; inset: 0;
+      background:
+        radial-gradient(ellipse 60% 50% at 40% 40%, rgba(201,168,76,0.08) 0%, transparent 70%),
+        radial-gradient(ellipse 40% 60% at 70% 70%, rgba(212,95,60,0.05) 0%, transparent 60%),
+        linear-gradient(160deg, #0f0a02 0%, #07080a 50%, #080510 100%);
+    }
+
+    /* Lignes de scène diagonales */
+    .stage-lines {
+      position: absolute; inset: 0;
+      background-image:
+        repeating-linear-gradient(
+          -45deg,
+          transparent,
+          transparent 60px,
+          rgba(201,168,76,0.015) 60px,
+          rgba(201,168,76,0.015) 61px
+        );
+    }
+
+    /* Rideau gauche */
+    .curtain-left {
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 60px;
+      background: linear-gradient(90deg, rgba(30,15,0,0.9) 0%, transparent 100%);
+    }
+    .curtain-right {
+      position: absolute;
+      right: 0; top: 0; bottom: 0;
+      width: 60px;
+      background: linear-gradient(270deg, rgba(30,15,0,0.6) 0%, transparent 100%);
+    }
+
+    /* Spot lumineux */
+    .spotlight {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(60px);
+      pointer-events: none;
+      animation: breathe 5s ease-in-out infinite alternate;
+    }
+    .sl1 {
+      width: 500px; height: 500px;
+      top: -100px; left: -80px;
+      background: radial-gradient(circle, rgba(201,168,76,0.1) 0%, transparent 60%);
+    }
+    .sl2 {
+      width: 300px; height: 300px;
+      bottom: 0; right: 80px;
+      background: radial-gradient(circle, rgba(212,95,60,0.08) 0%, transparent 60%);
+      animation-delay: -2.5s;
+    }
+    @keyframes breathe {
+      from { opacity: 0.6; transform: scale(1); }
+      to   { opacity: 1;   transform: scale(1.12); }
+    }
+
+    /* Logo top-left */
+    .stage-logo {
+      position: absolute;
+      top: 36px; left: 48px;
+      z-index: 10;
+      text-decoration: none;
+    }
+    .stage-logo-text {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: var(--cream);
+    }
+    .stage-logo-text span { color: var(--gold); }
+    .stage-logo-sub {
+      font-size: 0.6rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    /* Contenu central du stage */
+    .stage-content {
+      position: absolute;
+      bottom: 80px; left: 48px; right: 60px;
+      z-index: 10;
+    }
+
+    .stage-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.65rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 24px;
+    }
+    .stage-tag::before {
+      content: '';
+      width: 28px; height: 1px;
+      background: var(--gold);
+      display: block;
+    }
+
+    /* Carrousel de citations */
+    .quotes-container {
+      position: relative;
+      height: 180px;
+      margin-bottom: 40px;
+      overflow: hidden;
+    }
+    .quote {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.8s ease, transform 0.8s ease;
+    }
+    .quote.active {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .quote.leaving {
+      opacity: 0;
+      transform: translateY(-20px);
+    }
+    .quote-text {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(1.5rem, 2.5vw, 2.2rem);
+      font-weight: 300;
+      font-style: italic;
+      line-height: 1.3;
+      color: var(--cream);
+      margin-bottom: 20px;
+    }
+    .quote-text strong { font-weight: 700; color: var(--gold); font-style: normal; }
+    .quote-author {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .quote-avatar {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      background: var(--surface);
+      border: 1px solid rgba(201,168,76,0.25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+    }
+    .quote-name { font-size: 0.8rem; font-weight: 600; }
+    .quote-role { font-size: 0.68rem; color: var(--gold); letter-spacing: 0.08em; text-transform: uppercase; }
+
+    /* Dots */
+    .quote-dots {
+      display: flex;
+      gap: 6px;
+    }
+    .dot {
+      width: 20px; height: 2px;
+      background: var(--muted2);
+      transition: background 0.4s, width 0.4s;
+      cursor: pointer;
+    }
+    .dot.active { background: var(--gold); width: 32px; }
+
+    /* Stats bottom-left */
+    .stage-stats {
+      display: flex;
+      gap: 32px;
+      margin-top: 32px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+    }
+    .stage-stat-val {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--cream);
+    }
+    .stage-stat-label {
+      font-size: 0.62rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    /* ══════════════════════════════════
+       RIGHT — FORM PANEL
+    ══════════════════════════════════ */
+    .form-panel {
+      background: var(--surface);
+      border-left: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 48px 48px;
+      overflow-y: auto;
+      position: relative;
+    }
+
+    /* Barre de progression étapes */
+    .steps-bar {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      margin-bottom: 40px;
+    }
+    .step-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.65rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted2);
+      transition: color 0.3s;
+    }
+    .step-item.active { color: var(--gold); }
+    .step-item.done { color: var(--green); }
+    .step-num {
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      border: 1px solid currentColor;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.65rem;
+      font-weight: 700;
+      flex-shrink: 0;
+      transition: background 0.3s;
+    }
+    .step-item.active .step-num { background: var(--gold-dim); }
+    .step-item.done .step-num { background: rgba(76,175,125,0.15); }
+    .step-connector {
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+      margin: 0 8px;
+    }
+
+    /* Vues */
+    .view { display: none; }
+    .view.active { display: block; animation: slideIn 0.4s ease; }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(16px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+
+    /* Titre */
+    .form-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2rem;
+      font-weight: 700;
+      line-height: 1.1;
+      margin-bottom: 6px;
+    }
+    .form-title em { font-style: italic; color: var(--gold); }
+    .form-subtitle {
+      font-size: 0.82rem;
+      color: var(--muted);
+      margin-bottom: 32px;
+      line-height: 1.6;
+    }
+
+    /* ─ Choix rôle ─ */
+    .role-cards {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+    .role-card {
+      border: 1px solid var(--border);
+      background: var(--card);
+      padding: 24px 20px;
+      cursor: pointer;
+      transition: all 0.25s;
+      position: relative;
+      overflow: hidden;
+      text-align: center;
+    }
+    .role-card::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 2px;
+      transform: scaleX(0);
+      transition: transform 0.3s;
+    }
+    .role-card.artist-card::after { background: var(--gold); }
+    .role-card.company-card::after { background: var(--blue); }
+    .role-card:hover { background: var(--card); transform: translateY(-2px); }
+    .role-card.selected.artist-card {
+      border-color: rgba(201,168,76,0.4);
+      background: var(--gold-dim);
+    }
+    .role-card.selected.artist-card::after { transform: scaleX(1); }
+    .role-card.selected.company-card {
+      border-color: rgba(91,140,245,0.4);
+      background: var(--blue-dim);
+    }
+    .role-card.selected.company-card::after { transform: scaleX(1); }
+    .role-emoji { font-size: 2.2rem; display: block; margin-bottom: 10px; }
+    .role-name { font-size: 0.88rem; font-weight: 600; margin-bottom: 4px; }
+    .role-desc { font-size: 0.7rem; color: var(--muted); line-height: 1.5; }
+    .role-check {
+      position: absolute;
+      top: 10px; right: 10px;
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      background: var(--green);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.6rem;
+      color: #fff;
+      opacity: 0;
+      transform: scale(0.5);
+      transition: opacity 0.3s, transform 0.3s;
+    }
+    .role-card.selected .role-check { opacity: 1; transform: scale(1); }
+
+    /* ─ Inputs ─ */
+    .field { margin-bottom: 18px; }
+    .field-label {
+      display: block;
+      font-size: 0.68rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+    .input {
+      width: 100%;
+      background: var(--card);
+      border: 1px solid var(--border);
+      color: var(--cream);
+      padding: 13px 16px;
+      font-family: 'Syne', sans-serif;
+      font-size: 0.85rem;
+      outline: none;
+      transition: border-color 0.25s, background 0.25s;
+      letter-spacing: 0.02em;
+    }
+    .input:focus { border-color: rgba(201,168,76,0.5); background: rgba(201,168,76,0.03); }
+    .input.error { border-color: var(--red); background: var(--error); }
+    .input::placeholder { color: var(--muted2); }
+    .field-error {
+      font-size: 0.68rem;
+      color: var(--red);
+      margin-top: 5px;
+      display: none;
+    }
+    .field-error.visible { display: block; }
+
+    .input-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    /* Password toggle */
+    .input-wrap { position: relative; }
+    .eye-btn {
+      position: absolute;
+      right: 14px; top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: var(--muted2);
+      cursor: pointer;
+      font-size: 1rem;
+      transition: color 0.2s;
+      padding: 0;
+      line-height: 1;
+    }
+    .eye-btn:hover { color: var(--cream); }
+
+    /* Referral code field */
+    .referral-row {
+      display: flex;
+      gap: 8px;
+      align-items: flex-end;
+    }
+    .referral-row .field { flex: 1; margin-bottom: 0; }
+    .referral-apply {
+      background: var(--gold-dim);
+      border: 1px solid rgba(201,168,76,0.3);
+      color: var(--gold);
+      padding: 13px 16px;
+      font-family: 'Syne', sans-serif;
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background 0.2s;
+      white-space: nowrap;
+    }
+    .referral-apply:hover { background: rgba(201,168,76,0.2); }
+    .referral-success {
+      font-size: 0.72rem;
+      color: var(--green);
+      margin-top: 6px;
+      display: none;
+    }
+    .referral-success.visible { display: block; }
+
+    /* Checkbox */
+    .checkbox-wrap {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 24px;
+      cursor: pointer;
+    }
+    .checkbox-wrap input[type="checkbox"] {
+      width: 16px; height: 16px;
+      accent-color: var(--gold);
+      cursor: pointer;
+      margin-top: 2px;
+      flex-shrink: 0;
+    }
+    .checkbox-label { font-size: 0.75rem; color: var(--muted); line-height: 1.5; }
+    .checkbox-label a { color: var(--gold); text-decoration: none; }
+    .checkbox-label a:hover { text-decoration: underline; }
+
+    /* Submit button */
+    .btn-submit {
+      width: 100%;
+      background: var(--gold);
+      border: none;
+      color: #000;
+      padding: 16px;
+      font-family: 'Syne', sans-serif;
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background 0.25s, transform 0.15s;
+      margin-bottom: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+    .btn-submit:hover { background: var(--gold-light); }
+    .btn-submit:active { transform: scale(0.99); }
+    .btn-submit.loading { pointer-events: none; opacity: 0.7; }
+    .btn-submit.company-mode { background: var(--blue); color: #fff; }
+    .btn-submit.company-mode:hover { background: #8ab0ff; }
+
+    /* OR divider */
+    .or-divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .or-line { flex: 1; height: 1px; background: var(--border); }
+    .or-text { font-size: 0.68rem; color: var(--muted2); letter-spacing: 0.1em; }
+
+    /* Google btn */
+    .btn-google {
+      width: 100%;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 13px;
+      font-family: 'Syne', sans-serif;
+      font-size: 0.78rem;
+      letter-spacing: 0.06em;
+      cursor: pointer;
+      transition: all 0.25s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+    .btn-google:hover { border-color: rgba(255,255,255,0.2); color: var(--cream); background: rgba(255,255,255,0.03); }
+
+    /* Switch links */
+    .switch-text {
+      text-align: center;
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+    .switch-link {
+      color: var(--gold);
+      cursor: pointer;
+      text-decoration: none;
+      font-weight: 600;
+      background: none;
+      border: none;
+      font-family: 'Syne', sans-serif;
+      font-size: 0.78rem;
+      transition: opacity 0.2s;
+    }
+    .switch-link:hover { opacity: 0.7; }
+
+    /* Nav buttons */
+    .nav-btns {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+    .btn-back {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 12px 20px;
+      font-family: 'Syne', sans-serif;
+      font-size: 0.72rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-back:hover { border-color: var(--cream); color: var(--cream); }
+    .btn-next {
+      flex: 1;
+      background: var(--gold-dim);
+      border: 1px solid rgba(201,168,76,0.3);
+      color: var(--gold);
+      padding: 12px 20px;
+      font-family: 'Syne', sans-serif;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-next:hover { background: rgba(201,168,76,0.2); }
+
+    /* Success screen */
+    .success-icon {
+      width: 72px; height: 72px;
+      border-radius: 50%;
+      background: rgba(76,175,125,0.12);
+      border: 1px solid rgba(76,175,125,0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      margin: 0 auto 24px;
+      animation: popIn 0.5s cubic-bezier(0.34,1.56,0.64,1) forwards;
+    }
+    @keyframes popIn {
+      from { transform: scale(0.3); opacity: 0; }
+      to   { transform: scale(1);   opacity: 1; }
+    }
+    .success-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.8rem;
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 8px;
+    }
+    .success-sub {
+      text-align: center;
+      font-size: 0.82rem;
+      color: var(--muted);
+      margin-bottom: 32px;
+      line-height: 1.6;
+    }
+
+    /* Password strength */
+    .pwd-strength {
+      display: flex;
+      gap: 4px;
+      margin-top: 8px;
+      margin-bottom: 4px;
+    }
+    .pwd-bar {
+      flex: 1; height: 3px;
+      background: var(--border);
+      transition: background 0.3s;
+      border-radius: 2px;
+    }
+    .pwd-label { font-size: 0.65rem; color: var(--muted); }
+
+    /* Noise overlay */
+    .form-panel::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    /* MOBILE */
+    @media (max-width: 768px) {
+      html, body { overflow: auto; }
+      .wrapper { grid-template-columns: 1fr; height: auto; }
+      .stage { height: 280px; }
+      .stage-content { bottom: 24px; left: 24px; right: 24px; }
+      .quotes-container { height: 120px; }
+      .quote-text { font-size: 1.1rem; }
+      .stage-stats { display: none; }
+      .form-panel { padding: 36px 28px; border-left: none; border-top: 1px solid var(--border); }
+      .role-cards { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+<div class="wrapper">
+
+  <!-- ════════════════════════════════════
+       LEFT — STAGE
+  ════════════════════════════════════ -->
+  <div class="stage">
+    <div class="stage-bg"></div>
+    <div class="stage-lines"></div>
+    <div class="spotlight sl1"></div>
+    <div class="spotlight sl2"></div>
+    <div class="curtain-left"></div>
+    <div class="curtain-right"></div>
+
+    <a href="#" class="stage-logo">
+      <div class="stage-logo-text">Scène<span>Pro</span></div>
+      <div class="stage-logo-sub">Artistes & Salons Professionnels</div>
+    </a>
+
+    <div class="stage-content">
+      <div class="stage-tag">Ils nous font confiance</div>
+
+      <div class="quotes-container">
+        <div class="quote active">
+          <div class="quote-text">
+            "Grâce à ScènePro, j'ai <strong>triplé mes bookings</strong> corporate en 6 mois. La plateforme parle enfin le langage des artistes."
+          </div>
+          <div class="quote-author">
+            <div class="quote-avatar">🎭</div>
+            <div>
+              <div class="quote-name">Sophie Marleau</div>
+              <div class="quote-role">Comédienne · Lyon</div>
+            </div>
+          </div>
+        </div>
+        <div class="quote">
+          <div class="quote-text">
+            "En 10 minutes, on avait trouvé <strong>le magicien parfait</strong> pour notre stand. Un niveau de qualité qu'on n'avait jamais eu avant."
+          </div>
+          <div class="quote-author">
+            <div class="quote-avatar">🏢</div>
+            <div>
+              <div class="quote-name">Laure Besson</div>
+              <div class="quote-role">Dir. Marketing · IndustrieCorp</div>
+            </div>
+          </div>
+        </div>
+        <div class="quote">
+          <div class="quote-text">
+            "Le programme de parrainage est <strong>génial</strong>. J'ai parrainé 4 collègues artistes — ça me rapporte chaque mois sans rien faire."
+          </div>
+          <div class="quote-author">
+            <div class="quote-avatar">🎵</div>
+            <div>
+              <div class="quote-name">The Brass Trio</div>
+              <div class="quote-role">Musiciens · Paris</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="quote-dots" id="dots">
+        <div class="dot active" onclick="goQuote(0)"></div>
+        <div class="dot" onclick="goQuote(1)"></div>
+        <div class="dot" onclick="goQuote(2)"></div>
+      </div>
+
+      <div class="stage-stats">
+        <div>
+          <div class="stage-stat-val">500+</div>
+          <div class="stage-stat-label">Artistes vérifiés</div>
+        </div>
+        <div>
+          <div class="stage-stat-val">1 200+</div>
+          <div class="stage-stat-label">Salons animés</div>
+        </div>
+        <div>
+          <div class="stage-stat-val">98%</div>
+          <div class="stage-stat-label">Satisfaction</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════
+       RIGHT — FORM PANEL
+  ════════════════════════════════════ -->
+  <div class="form-panel">
+
+    <!-- BARRE D'ÉTAPES -->
+    <div class="steps-bar" id="stepsBar">
+      <div class="step-item active" id="step1">
+        <div class="step-num">1</div>
+        <span>Rôle</span>
+      </div>
+      <div class="step-connector"></div>
+      <div class="step-item" id="step2">
+        <div class="step-num">2</div>
+        <span>Compte</span>
+      </div>
+      <div class="step-connector"></div>
+      <div class="step-item" id="step3">
+        <div class="step-num">3</div>
+        <span>Profil</span>
+      </div>
+    </div>
+
+    <!-- ── VUE : CONNEXION ── -->
+    <div class="view active" id="view-login">
+      <div class="form-title">Bon retour,<br/><em>bienvenue !</em></div>
+      <div class="form-subtitle">Connectez-vous à votre espace ScènePro.</div>
+
+      <div class="field">
+        <label class="field-label">Adresse email</label>
+        <input class="input" type="email" placeholder="vous@exemple.fr" id="login-email"/>
+        <div class="field-error" id="err-login-email">Email invalide</div>
+      </div>
+
+      <div class="field">
+        <label class="field-label">Mot de passe</label>
+        <div class="input-wrap">
+          <input class="input" type="password" placeholder="••••••••••" id="login-pwd" style="padding-right:44px"/>
+          <button class="eye-btn" onclick="togglePwd('login-pwd', this)">👁</button>
+        </div>
+        <div class="field-error" id="err-login-pwd">Mot de passe requis</div>
+      </div>
+
+      <div style="text-align:right;margin-bottom:20px;">
+        <button class="switch-link" style="color:var(--muted);font-weight:400;" onclick="showView('view-forgot')">Mot de passe oublié ?</button>
+      </div>
+
+      <button class="btn-submit" id="login-btn" onclick="handleLogin()">Se connecter</button>
+
+      <div class="or-divider">
+        <div class="or-line"></div>
+        <div class="or-text">ou</div>
+        <div class="or-line"></div>
+      </div>
+
+      <button class="btn-google" onclick="handleGoogle()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+          <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+          <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+          <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+          <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+        </svg>
+        Continuer avec Google
+      </button>
+
+      <div class="switch-text">
+        Pas encore de compte ?
+        <button class="switch-link" onclick="showRegister()">S'inscrire gratuitement →</button>
+      </div>
+    </div>
+
+    <!-- ── VUE : INSCRIPTION ÉTAPE 1 — RÔLE ── -->
+    <div class="view" id="view-role">
+      <div class="form-title">Bienvenue sur<br/><em>ScènePro !</em></div>
+      <div class="form-subtitle">Vous êtes… ? Choisissez votre profil pour commencer.</div>
+
+      <div class="role-cards">
+        <div class="role-card artist-card" id="card-artist" onclick="selectRole('artist')">
+          <div class="role-check">✓</div>
+          <span class="role-emoji">🎭</span>
+          <div class="role-name">Artiste</div>
+          <div class="role-desc">Comédien, magicien, musicien, danseur, conférencier...</div>
+        </div>
+        <div class="role-card company-card" id="card-company" onclick="selectRole('company')">
+          <div class="role-check">✓</div>
+          <span class="role-emoji">🏢</span>
+          <div class="role-name">Entreprise</div>
+          <div class="role-desc">Organisateur de salon, événementiel corporate...</div>
+        </div>
+      </div>
+
+      <button class="btn-submit" id="btn-role" onclick="goToStep2()" style="opacity:0.4;pointer-events:none">
+        Continuer →
+      </button>
+
+      <div class="or-divider">
+        <div class="or-line"></div>
+        <div class="or-text">ou</div>
+        <div class="or-line"></div>
+      </div>
+      <button class="btn-google" onclick="handleGoogle()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+          <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+          <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+          <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+          <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+        </svg>
+        Continuer avec Google
+      </button>
+      <div class="switch-text">
+        Déjà un compte ?
+        <button class="switch-link" onclick="showView('view-login')">Se connecter →</button>
+      </div>
+    </div>
+
+    <!-- ── VUE : INSCRIPTION ÉTAPE 2 — COMPTE ── -->
+    <div class="view" id="view-account">
+      <div class="form-title" id="account-title">Créez votre<br/><em>compte artiste</em></div>
+      <div class="form-subtitle">Vos identifiants de connexion ScènePro.</div>
+
+      <div class="input-row">
+        <div class="field">
+          <label class="field-label">Prénom</label>
+          <input class="input" type="text" placeholder="Sophie" id="reg-firstname"/>
+          <div class="field-error" id="err-firstname">Requis</div>
+        </div>
+        <div class="field">
+          <label class="field-label">Nom</label>
+          <input class="input" type="text" placeholder="Marleau" id="reg-lastname"/>
+          <div class="field-error" id="err-lastname">Requis</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="field-label">Adresse email</label>
+        <input class="input" type="email" placeholder="vous@exemple.fr" id="reg-email"/>
+        <div class="field-error" id="err-reg-email">Email invalide</div>
+      </div>
+
+      <div class="field">
+        <label class="field-label">Mot de passe</label>
+        <div class="input-wrap">
+          <input class="input" type="password" placeholder="8 caractères minimum" id="reg-pwd" style="padding-right:44px" oninput="checkPwdStrength(this.value)"/>
+          <button class="eye-btn" onclick="togglePwd('reg-pwd', this)">👁</button>
+        </div>
+        <div class="pwd-strength">
+          <div class="pwd-bar" id="pb1"></div>
+          <div class="pwd-bar" id="pb2"></div>
+          <div class="pwd-bar" id="pb3"></div>
+          <div class="pwd-bar" id="pb4"></div>
+        </div>
+        <div class="pwd-label" id="pwd-label">Entrez un mot de passe</div>
+        <div class="field-error" id="err-pwd">8 caractères minimum</div>
+      </div>
+
+      <!-- Code parrainage (artiste seulement) -->
+      <div id="referral-section" class="field" style="margin-bottom:8px">
+        <label class="field-label">Code de parrainage <span style="color:var(--muted2);font-size:0.6em;letter-spacing:0">(optionnel)</span></label>
+        <div class="referral-row">
+          <div class="field">
+            <input class="input" type="text" placeholder="ex: SOPHI-K4R2" id="referral-code" style="text-transform:uppercase;letter-spacing:0.1em"/>
+          </div>
+          <button class="referral-apply" onclick="applyReferral()">Valider</button>
+        </div>
+        <div class="referral-success" id="referral-success">✓ Code validé — vous bénéficiez d'une commission réduite !</div>
+      </div>
+
+      <div class="nav-btns" style="margin-top:8px">
+        <button class="btn-back" onclick="showView('view-role'); setStep(1)">← Retour</button>
+        <button class="btn-next" id="btn-account" onclick="goToStep3()">Continuer →</button>
+      </div>
+
+      <div class="switch-text" style="margin-top:16px">
+        Déjà un compte ?
+        <button class="switch-link" onclick="showView('view-login'); resetSteps()">Se connecter →</button>
+      </div>
+    </div>
+
+    <!-- ── VUE : INSCRIPTION ÉTAPE 3 — PROFIL ── -->
+    <div class="view" id="view-profile">
+      <!-- ARTISTE -->
+      <div id="profile-artist">
+        <div class="form-title">Votre <em>profil artiste</em></div>
+        <div class="form-subtitle">Ces infos apparaîtront sur votre fiche publique.</div>
+
+        <div class="field">
+          <label class="field-label">Nom de scène</label>
+          <input class="input" type="text" placeholder="Sophie Marleau" id="stage-name"/>
+        </div>
+
+        <div class="field">
+          <label class="field-label">Catégorie principale</label>
+          <select class="input" id="artist-cat" style="cursor:pointer">
+            <option value="" disabled selected>Choisissez votre catégorie...</option>
+            <option value="comedian">🎭 Comédien(ne)</option>
+            <option value="magician">🎩 Magicien(ne)</option>
+            <option value="musician">🎵 Musicien(ne)</option>
+            <option value="dancer">💃 Danseur(se)</option>
+            <option value="speaker">🎤 Conférencier(ère)</option>
+            <option value="visual_artist">🎨 Artiste visuel(le)</option>
+            <option value="circus">🤹 Artiste de cirque</option>
+            <option value="humorist">😂 Humoriste</option>
+            <option value="other">✨ Autre</option>
+          </select>
+        </div>
+
+        <div class="input-row">
+          <div class="field">
+            <label class="field-label">Ville</label>
+            <input class="input" type="text" placeholder="Lyon" id="artist-city"/>
+          </div>
+          <div class="field">
+            <label class="field-label">Tarif indicatif</label>
+            <input class="input" type="text" placeholder="ex: 800 – 1500 €" id="artist-price"/>
+          </div>
+        </div>
+
+        <div class="checkbox-wrap">
+          <input type="checkbox" id="cgu-artist"/>
+          <label class="checkbox-label" for="cgu-artist">
+            J'accepte les <a href="#">Conditions Générales d'Utilisation</a> et la <a href="#">Politique de confidentialité</a> de ScènePro.
+          </label>
+        </div>
+
+        <div class="nav-btns">
+          <button class="btn-back" onclick="showView('view-account'); setStep(2)">← Retour</button>
+          <button class="btn-next" onclick="handleRegister()">Créer mon profil →</button>
+        </div>
+      </div>
+
+      <!-- ENTREPRISE -->
+      <div id="profile-company" style="display:none">
+        <div class="form-title">Votre <em>profil entreprise</em></div>
+        <div class="form-subtitle">Pour personnaliser votre expérience de recherche.</div>
+
+        <div class="field">
+          <label class="field-label">Nom de l'entreprise</label>
+          <input class="input" type="text" placeholder="Salon Industrie Lyon" id="company-name"/>
+        </div>
+
+        <div class="field">
+          <label class="field-label">Secteur d'activité</label>
+          <select class="input" id="company-sector" style="cursor:pointer">
+            <option value="" disabled selected>Choisissez votre secteur...</option>
+            <option>Industrie & Manufacturing</option>
+            <option>Tech & Numérique</option>
+            <option>Santé & Pharma</option>
+            <option>Finance & Banque</option>
+            <option>Agroalimentaire</option>
+            <option>Événementiel</option>
+            <option>Retail & Commerce</option>
+            <option>Autre</option>
+          </select>
+        </div>
+
+        <div class="input-row">
+          <div class="field">
+            <label class="field-label">Nom du contact</label>
+            <input class="input" type="text" placeholder="Laure Besson" id="contact-name"/>
+          </div>
+          <div class="field">
+            <label class="field-label">Ville</label>
+            <input class="input" type="text" placeholder="Lyon" id="company-city"/>
+          </div>
+        </div>
+
+        <div class="checkbox-wrap">
+          <input type="checkbox" id="cgu-company"/>
+          <label class="checkbox-label" for="cgu-company">
+            J'accepte les <a href="#">Conditions Générales d'Utilisation</a> et la <a href="#">Politique de confidentialité</a> de ScènePro.
+          </label>
+        </div>
+
+        <div class="nav-btns">
+          <button class="btn-back" onclick="showView('view-account'); setStep(2)">← Retour</button>
+          <button class="btn-next" style="background:var(--blue-dim);border-color:rgba(91,140,245,0.3);color:var(--blue-light)" onclick="handleRegister()">Créer mon compte →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── VUE : MOT DE PASSE OUBLIÉ ── -->
+    <div class="view" id="view-forgot">
+      <div class="form-title">Réinitialiser<br/><em>votre mot de passe</em></div>
+      <div class="form-subtitle">Entrez votre email et nous vous enverrons un lien de réinitialisation.</div>
+
+      <div class="field">
+        <label class="field-label">Adresse email</label>
+        <input class="input" type="email" placeholder="vous@exemple.fr" id="forgot-email"/>
+      </div>
+
+      <button class="btn-submit" onclick="handleForgot()">Envoyer le lien</button>
+
+      <div class="switch-text">
+        <button class="switch-link" onclick="showView('view-login')">← Retour à la connexion</button>
+      </div>
+    </div>
+
+    <!-- ── VUE : SUCCÈS ── -->
+    <div class="view" id="view-success">
+      <div class="success-icon">🎉</div>
+      <div class="success-title" id="success-title">Bienvenue sur ScènePro !</div>
+      <div class="success-sub" id="success-sub">
+        Votre compte a été créé avec succès. Vous allez être redirigé vers votre tableau de bord.
+      </div>
+      <button class="btn-submit" id="success-btn" onclick="goToDashboard()">
+        Accéder à mon espace →
+      </button>
+    </div>
+
+  </div><!-- /form-panel -->
+</div><!-- /wrapper -->
+
+<script>
+  // ══════════════════════════════════
+  // STATE
+  // ══════════════════════════════════
+  let currentRole = null;
+  let currentView = 'view-login';
+
+  // ══════════════════════════════════
+  // QUOTES CAROUSEL
+  // ══════════════════════════════════
+  const quotes = document.querySelectorAll('.quote');
+  const dots   = document.querySelectorAll('.dot');
+  let qIdx = 0, qTimer;
+
+  function goQuote(idx) {
+    quotes[qIdx].classList.remove('active');
+    quotes[qIdx].classList.add('leaving');
+    dots[qIdx].classList.remove('active');
+    setTimeout(() => quotes[qIdx].classList.remove('leaving'), 800);
+    qIdx = idx;
+    quotes[qIdx].classList.add('active');
+    dots[qIdx].classList.add('active');
+    clearInterval(qTimer);
+    qTimer = setInterval(() => goQuote((qIdx + 1) % quotes.length), 5000);
+  }
+  qTimer = setInterval(() => goQuote((qIdx + 1) % quotes.length), 5000);
+
+  // ══════════════════════════════════
+  // VIEWS
+  // ══════════════════════════════════
+  function showView(id) {
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    currentView = id;
+    const isAuth = ['view-login','view-forgot','view-success'].includes(id);
+    document.getElementById('stepsBar').style.display = isAuth ? 'none' : 'flex';
+  }
+
+  function showRegister() {
+    showView('view-role');
+    setStep(1);
+  }
+
+  // ══════════════════════════════════
+  // STEPS
+  // ══════════════════════════════════
+  function setStep(n) {
+    [1,2,3].forEach(i => {
+      const el = document.getElementById('step'+i);
+      el.classList.remove('active','done');
+      if (i < n) el.classList.add('done'), el.querySelector('.step-num').textContent = '✓';
+      if (i === n) el.classList.add('active'), el.querySelector('.step-num').textContent = i;
+      if (i > n) el.querySelector('.step-num').textContent = i;
+    });
+  }
+  function resetSteps() { setStep(1); }
+
+  // ══════════════════════════════════
+  // ROLE SELECTION
+  // ══════════════════════════════════
+  function selectRole(role) {
+    currentRole = role;
+    document.getElementById('card-artist').classList.toggle('selected', role === 'artist');
+    document.getElementById('card-company').classList.toggle('selected', role === 'company');
+    const btn = document.getElementById('btn-role');
+    btn.style.opacity = '1';
+    btn.style.pointerEvents = 'auto';
+    if (role === 'company') {
+      btn.classList.add('company-mode');
+    } else {
+      btn.classList.remove('company-mode');
+    }
+  }
+
+  function goToStep2() {
+    if (!currentRole) return;
+    const title = document.getElementById('account-title');
+    title.innerHTML = currentRole === 'artist'
+      ? 'Créez votre<br/><em>compte artiste</em>'
+      : 'Créez votre<br/><em>compte entreprise</em>';
+    document.getElementById('referral-section').style.display =
+      currentRole === 'artist' ? 'block' : 'none';
+    const nextBtn = document.getElementById('btn-account');
+    if (currentRole === 'company') {
+      nextBtn.style.background = 'var(--blue-dim)';
+      nextBtn.style.borderColor = 'rgba(91,140,245,0.3)';
+      nextBtn.style.color = 'var(--blue-light)';
+    } else {
+      nextBtn.style.background = '';
+      nextBtn.style.borderColor = '';
+      nextBtn.style.color = '';
+    }
+    showView('view-account');
+    setStep(2);
+  }
+
+  function goToStep3() {
+    const email = document.getElementById('reg-email').value;
+    const pwd   = document.getElementById('reg-pwd').value;
+    let ok = true;
+    if (!email.includes('@')) {
+      document.getElementById('reg-email').classList.add('error');
+      document.getElementById('err-reg-email').classList.add('visible');
+      ok = false;
+    } else {
+      document.getElementById('reg-email').classList.remove('error');
+      document.getElementById('err-reg-email').classList.remove('visible');
+    }
+    if (pwd.length < 8) {
+      document.getElementById('reg-pwd').classList.add('error');
+      document.getElementById('err-pwd').classList.add('visible');
+      ok = false;
+    } else {
+      document.getElementById('reg-pwd').classList.remove('error');
+      document.getElementById('err-pwd').classList.remove('visible');
+    }
+    if (!ok) return;
+
+    document.getElementById('profile-artist').style.display  = currentRole === 'artist'  ? 'block' : 'none';
+    document.getElementById('profile-company').style.display = currentRole === 'company' ? 'block' : 'none';
+    showView('view-profile');
+    setStep(3);
+  }
+
+  // ══════════════════════════════════
+  // PASSWORD
+  // ══════════════════════════════════
+  function togglePwd(id, btn) {
+    const inp = document.getElementById(id);
+    inp.type = inp.type === 'password' ? 'text' : 'password';
+    btn.textContent = inp.type === 'password' ? '👁' : '🙈';
+  }
+
+  function checkPwdStrength(val) {
+    const bars  = ['pb1','pb2','pb3','pb4'].map(id => document.getElementById(id));
+    const label = document.getElementById('pwd-label');
+    let score = 0;
+    if (val.length >= 8) score++;
+    if (/[A-Z]/.test(val)) score++;
+    if (/[0-9]/.test(val)) score++;
+    if (/[^A-Za-z0-9]/.test(val)) score++;
+    const colors = ['#e05555','#e8a94a','#5b8cf5','#4caf7d'];
+    const labels = ['Très faible','Faible','Moyen','Fort'];
+    bars.forEach((b,i) => b.style.background = i < score ? colors[score-1] : 'var(--border)');
+    label.textContent = val.length === 0 ? 'Entrez un mot de passe' : labels[score-1] ?? labels[0];
+    label.style.color = val.length === 0 ? 'var(--muted)' : colors[score-1];
+  }
+
+  // ══════════════════════════════════
+  // REFERRAL
+  // ══════════════════════════════════
+  function applyReferral() {
+    const code = document.getElementById('referral-code').value.trim().toUpperCase();
+    const ok   = code.length >= 5 && code.includes('-');
+    const msg  = document.getElementById('referral-success');
+    if (ok) {
+      msg.classList.add('visible');
+      document.getElementById('referral-code').style.borderColor = 'rgba(76,175,125,0.5)';
+    } else {
+      document.getElementById('referral-code').classList.add('error');
+      setTimeout(() => document.getElementById('referral-code').classList.remove('error'), 1500);
+    }
+  }
+
+  // ══════════════════════════════════
+  // SUBMIT HANDLERS
+  // ══════════════════════════════════
+  function handleLogin() {
+    const email = document.getElementById('login-email').value;
+    const pwd   = document.getElementById('login-pwd').value;
+    let ok = true;
+    if (!email.includes('@')) {
+      document.getElementById('login-email').classList.add('error');
+      document.getElementById('err-login-email').classList.add('visible');
+      ok = false;
+    }
+    if (pwd.length < 1) {
+      document.getElementById('login-pwd').classList.add('error');
+      document.getElementById('err-login-pwd').classList.add('visible');
+      ok = false;
+    }
+    if (!ok) return;
+    const btn = document.getElementById('login-btn');
+    btn.textContent = 'Connexion en cours...';
+    btn.classList.add('loading');
+    setTimeout(() => {
+      document.getElementById('success-title').textContent = 'Connexion réussie !';
+      document.getElementById('success-sub').textContent = 'Vous êtes connecté à votre espace ScènePro.';
+      document.getElementById('success-btn').textContent = 'Accéder à mon tableau de bord →';
+      showView('view-success');
+    }, 1400);
+  }
+
+  function handleRegister() {
+    document.getElementById('success-title').textContent = 'Bienvenue sur ScènePro !';
+    document.getElementById('success-sub').textContent = currentRole === 'artist'
+      ? 'Votre profil artiste est en cours de validation (48h). Vous pouvez dès maintenant compléter votre vitrine.'
+      : 'Votre compte entreprise est prêt. Commencez à chercher votre artiste idéal !';
+    document.getElementById('success-btn').textContent = currentRole === 'artist'
+      ? 'Aller à mon espace artiste →'
+      : 'Trouver un artiste →';
+    showView('view-success');
+  }
+
+  function handleGoogle() {
+    alert('Redirection vers l\'authentification Google...\n(À connecter avec Supabase Auth)');
+  }
+
+  function handleForgot() {
+    const email = document.getElementById('forgot-email').value;
+    if (!email.includes('@')) return;
+    document.getElementById('success-title').textContent = 'Email envoyé !';
+    document.getElementById('success-sub').textContent = `Un lien de réinitialisation a été envoyé à ${email}. Vérifiez votre boîte mail.`;
+    document.getElementById('success-btn').textContent = 'Retour à la connexion';
+    showView('view-success');
+  }
+
+  function goToDashboard() {
+    alert('Redirection vers le dashboard...\n(Navigation Next.js à connecter)');
+  }
+
+  // Init
+  showView('view-login');
+</script>
+</body>
+</html>
